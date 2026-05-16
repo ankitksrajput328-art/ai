@@ -604,15 +604,15 @@ function generateFollowUpQuestions(prompt) {
 }
 
 
-// --- Firebase Authentication Mock / Setup ---
+// --- Firebase Real-Time Configuration ---
 const firebaseConfig = {
-    apiKey: "AIzaSyCi5P9tWq0mgVyuw5g534xUf0h07YEF2Tk",
-    authDomain: "nexus-ai-ultra-27ad8.firebaseapp.com",
-    projectId: "nexus-ai-ultra-27ad8",
-    storageBucket: "nexus-ai-ultra-27ad8.firebasestorage.app",
-    messagingSenderId: "871100083685",
-    appId: "1:871100083685:web:658583e44d887e609f530c",
-    measurementId: "G-LLVCBX0KW4"
+    apiKey: "AIzaSyDq7ejqZJzFcYp_jfxA2cNMBVryEJvZBvs",
+    authDomain: "nexus-ai-ultra-4cf8d.firebaseapp.com",
+    projectId: "nexus-ai-ultra-4cf8d",
+    storageBucket: "nexus-ai-ultra-4cf8d.firebasestorage.app",
+    messagingSenderId: "458163586885",
+    appId: "1:458163586885:web:9db04950dd9938f57aa02c",
+    measurementId: "G-K0GGYDBNKV"
 };
 
 // Initialize Firebase only if config is provided
