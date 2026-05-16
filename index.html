@@ -46,6 +46,14 @@
     }
     </script>
 
+    <!-- PWA Manifest & Icons -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexusAI">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2103/2103633.png">
+
     <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +62,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" style="display:none; position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; padding:14px 24px; border-radius:16px; z-index:9999; display:flex; align-items:center; gap:12px; box-shadow:0 8px 32px rgba(139,92,246,0.4); font-family:'Outfit',sans-serif; font-weight:600; white-space:nowrap;">
+        <i class="fa-solid fa-download"></i>
+        Install Nexus AI App
+        <button id="pwa-install-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; padding:6px 16px; border-radius:10px; cursor:pointer; font-weight:700; font-family:'Outfit',sans-serif;">Install</button>
+        <button onclick="document.getElementById('pwa-install-banner').style.display='none'" style="background:none; border:none; color:rgba(255,255,255,0.7); cursor:pointer; font-size:18px;">✕</button>
+    </div>
+
     <div class="app-shell">
         <!-- Sidebar Overlay -->
         <div class="sidebar-overlay"></div>
@@ -304,5 +320,48 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
+
+    <!-- PWA: Service Worker Registration + Install Prompt -->
+    <script>
+        // ── Service Worker Registration ──────────────────────
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('[Nexus PWA] Service Worker registered:', reg.scope))
+                    .catch(err => console.warn('[Nexus PWA] SW registration failed:', err));
+            });
+        }
+
+        // ── PWA Install Prompt (Chrome "Add to Home Screen") ─
+        let deferredPrompt;
+        const banner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (banner) {
+                banner.style.display = 'flex';
+                // Auto-hide after 10 seconds if user ignores
+                setTimeout(() => { if (banner) banner.style.display = 'none'; }, 10000);
+            }
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('[Nexus PWA] Install outcome:', outcome);
+                deferredPrompt = null;
+                if (banner) banner.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            console.log('[Nexus PWA] App successfully installed!');
+            if (banner) banner.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
