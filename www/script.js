@@ -476,7 +476,7 @@ function shareApp() {
     const shareData = {
         title: 'Nexus AI Ultra',
         text: 'Experience the world\'s most advanced neural intelligence platform.',
-        url: 'https://nexus-ai-ultra.vercel.app/'
+        url: window.location.origin
     };
 
     if (navigator.share) {
@@ -485,7 +485,7 @@ function shareApp() {
             .catch((err) => console.log('Error sharing:', err));
     } else {
         navigator.clipboard.writeText(shareData.url).then(() => {
-            showNotification('Link Copied', 'App link copied to clipboard. Share it anywhere!', 'info');
+            showNotification('Link Copied', 'App link copied to clipboard!', 'info');
         });
     }
 }
