@@ -471,3 +471,21 @@ function clearChatHistory() {
         showNotification('Neural Memory', 'History purged successfully.', 'success');
     }
 }
+
+function shareApp() {
+    const shareData = {
+        title: 'Nexus AI Ultra',
+        text: 'Experience the world\'s most advanced neural intelligence platform.',
+        url: 'https://nexus-ai-ultra.vercel.app/'
+    };
+
+    if (navigator.share) {
+        navigator.share(shareData)
+            .then(() => showNotification('Shared', 'Thanks for spreading the intelligence!', 'success'))
+            .catch((err) => console.log('Error sharing:', err));
+    } else {
+        navigator.clipboard.writeText(shareData.url).then(() => {
+            showNotification('Link Copied', 'App link copied to clipboard. Share it anywhere!', 'info');
+        });
+    }
+}
