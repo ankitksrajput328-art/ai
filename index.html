@@ -59,7 +59,7 @@
     <div class="nebula-bg"></div>
 
     <!-- PWA Install Banner -->
-    <div id="pwa-install-banner" style="display:none; position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; padding:14px 24px; border-radius:16px; z-index:9999; display:flex; align-items:center; gap:12px; box-shadow:0 8px 32px rgba(139,92,246,0.4); font-family:'Outfit',sans-serif; font-weight:600; white-space:nowrap;">
+    <div id="pwa-install-banner" style="display:none; position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; padding:14px 24px; border-radius:16px; z-index:9999; align-items:center; gap:12px; box-shadow:0 8px 32px rgba(139,92,246,0.4); font-family:'Outfit',sans-serif; font-weight:600; white-space:nowrap;">
         <i class="fa-solid fa-download"></i>
         Install Nexus AI App
         <button id="pwa-install-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; padding:6px 16px; border-radius:10px; cursor:pointer; font-weight:700; font-family:'Outfit',sans-serif;">Install</button>
@@ -68,7 +68,7 @@
 
     <div class="app-shell">
         <!-- Sidebar Overlay -->
-        <div class="sidebar-overlay"></div>
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Sidebar Navigation">

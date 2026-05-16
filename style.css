@@ -417,9 +417,15 @@ body {
 
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
-    .sidebar { transform: translateX(-100%); position: fixed; }
+    .sidebar { transform: translateX(-100%); position: fixed; z-index: 2000; height: 100%; top: 0; left: 0; box-shadow: var(--card-shadow); }
     .sidebar.active { transform: translateX(0); }
-    .bottom-nav { display: flex; }
+    .sidebar-overlay { 
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+        background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); 
+        z-index: 1500; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+    .bottom-nav { display: flex; z-index: 1000; }
     .main-content { width: 100%; }
     .top-nav { padding: 0 20px; }
     .chat-container { padding-bottom: 200px; }
