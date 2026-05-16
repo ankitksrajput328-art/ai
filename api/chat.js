@@ -54,9 +54,12 @@ Remember previous conversation context. If the user writes in Hindi/Hinglish, re
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey) {
     try {
-      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${geminiKey}`, {
+      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${geminiKey}`
+        },
         body: JSON.stringify({
           model: "gemini-1.5-flash",
           messages: [
