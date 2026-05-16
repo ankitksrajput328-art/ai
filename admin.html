@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI | Command & Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #030305;
+            --card: #0f172a;
+            --accent: #8b5cf6;
+            --text: #f8fafc;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #09090b;
+            border-right: 1px solid var(--border);
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        .logo { font-size: 24px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 12px; }
+        .nav-links { display: flex; flex-direction: column; gap: 8px; }
+        .nav-item {
+            padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 12px; color: #94a3b8; font-weight: 500;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(139, 92, 246, 0.1); color: var(--accent); }
+
+        /* Main Content */
+        .main { flex: 1; overflow-y: auto; padding: 48px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px; }
+        .stat-card {
+            background: var(--card); padding: 32px; border-radius: 28px; border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .stat-card .label { color: #94a3b8; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 12px; display: block; }
+        .stat-card .value { font-size: 32px; font-weight: 700; display: block; margin-bottom: 8px; }
+        .stat-card .trend { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+        .trend.up { color: #22c55e; }
+
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 40px; }
+        .chart-container { background: var(--card); padding: 32px; border-radius: 28px; border: 1px solid var(--border); }
+        .chart-container h3 { margin-top: 0; margin-bottom: 24px; font-size: 18px; }
+
+        .badge { padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge.pro { background: rgba(139, 92, 246, 0.1); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-bolt"></i> NEXUS AI</div>
+        <div class="nav-links">
+            <div class="nav-item active"><i class="fa-solid fa-chart-line"></i> Analytics</div>
+            <div class="nav-item"><i class="fa-solid fa-users"></i> Users</div>
+            <div class="nav-item"><i class="fa-solid fa-credit-card"></i> Billing</div>
+            <div class="nav-item"><i class="fa-solid fa-bug"></i> Crash Reports</div>
+            <div class="nav-item"><i class="fa-solid fa-shield-halved"></i> Security</div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <div>
+                <h1 style="margin: 0;">Analytics Dashboard</h1>
+                <p style="color: #94a3b8; margin: 8px 0 0;">Real-time metrics from the Nexus Ecosystem.</p>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button class="nav-item" style="border: 1px solid var(--border); background: transparent;">Export CSV</button>
+                <button class="nav-item" style="background: var(--accent); color: white;">Refresh Live</button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <span class="label">Total Revenue (MRR)</span>
+                <span class="value">$24,850.00</span>
+                <span class="trend up"><i class="fa-solid fa-arrow-up"></i> +12% vs last month</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">GPU Cluster Load</span>
+                <span class="value">64.2%</span>
+                <span class="trend up"><i class="fa-solid fa-server"></i> 4 Regions Online</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">Avg AI Latency</span>
+                <span class="value">340ms</span>
+                <span class="label">P95: 1.2s</span>
+            </div>
+            <div class="stat-card">
+                <span class="label">User Growth</span>
+                <span class="value">+1.2M</span>
+                <span class="trend up"><i class="fa-solid fa-users-line"></i> Viral Spiking</span>
+            </div>
+        </div>
+
+        <div class="charts-row">
+            <div class="chart-container">
+                <h3>Global Traffic Distribution (Inference Requests)</h3>
+                <canvas id="usageChart" height="200"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Revenue by Tier</h3>
+                <canvas id="featureChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Usage Chart (Regional)
+        const ctxUsage = document.getElementById('usageChart').getContext('2d');
+        new Chart(ctxUsage, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Asia-South',
+                    data: [120000, 190000, 150000, 250000, 220000, 300000, 280000],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'US-East',
+                    data: [450000, 520000, 480000, 600000, 550000, 750000, 700000],
+                    borderColor: '#ec4899',
+                    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: true, position: 'bottom' } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
+            }
+        });
+
+        // Revenue Chart (Monetization)
+        const ctxFeature = document.getElementById('featureChart').getContext('2d');
+        new Chart(ctxFeature, {
+            type: 'doughnut',
+            data: {
+                labels: ['Ultra ($50)', 'Plus ($20)', 'Pro ($10)', 'Enterprise'],
+                datasets: [{
+                    data: [45, 30, 15, 10],
+                    backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%'
+            }
+        });
+    </script>
+</body>
+</html>

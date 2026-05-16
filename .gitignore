@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Android
+android/
+ios/
+.gradle/
+build/
+*.apk
+*.aar
+
+# Security
+.env
+*.key
+*.pem
+secrets.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

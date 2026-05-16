@@ -1,0 +1,25 @@
+{
+  "name": "Nexus AI Ultra - Ankit Antigravity",
+  "short_name": "NexusAI",
+  "description": "The world's most advanced multi-modal AI ecosystem with Neural Vision and Studio Rendering.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities", "ai"],
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2103/2103633.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2103/2103633.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

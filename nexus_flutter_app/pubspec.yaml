@@ -1,0 +1,39 @@
+name: nexus_ai_ultra
+description: A premium futuristic AI ecosystem for Android and iOS.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.0
+  riverpod_annotation: ^2.2.0
+  dio: ^5.3.0
+  google_fonts: ^6.1.0
+  font_awesome_flutter: ^10.6.0
+  flutter_animate: ^4.2.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  speech_to_text: ^6.3.0
+  flutter_tts: ^3.8.3
+  path_provider: ^2.1.1
+  json_annotation: ^4.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  riverpod_generator: ^2.3.0
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
+  freezed: ^2.4.5
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Regular.ttf
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
