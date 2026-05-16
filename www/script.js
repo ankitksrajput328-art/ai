@@ -413,3 +413,99 @@ function handleAuth(type) {
 
 function openAuthModal() { get('auth-modal').style.display = 'flex'; }
 function closeAuthModal() { get('auth-modal').style.display = 'none'; }
+
+// --- Router & View Switching ---
+function initRouter() {
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Run on initial load
+}
+
+function handleHashChange() {
+    const hash = window.location.hash || '#chat';
+    const viewId = 'view-' + hash.substring(1);
+    showView(viewId);
+}
+
+function showView(viewId) {
+    // Hide all views
+    const views = document.querySelectorAll('.app-view');
+    views.forEach(v => v.classList.remove('active'));
+    
+    // Show selected view
+    const activeView = get(viewId);
+    if (activeView) activeView.classList.add('active');
+    
+    // Update active nav item
+    const hash = '#' + viewId.replace('view-', '');
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        if (item.getAttribute('href') === hash) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+
+    if (window.innerWidth <= 1024) toggleSidebar();
+}
+
+// --- Image & Voice Handling (Pro Version Upgrades) ---
+function triggerImageUpload() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = handleImageUpload;
+    input.click();
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const base64String = e.target.result.split(',')[1];
+        currentImageBase64 = base64String;
+        currentImageMimeType = file.type;
+
+        // Show preview in UI
+        let previewContainer = get('image-preview-container');
+        if (!previewContainer) {
+            previewContainer = document.createElement('div');
+            previewContainer.id = 'image-preview-container';
+            previewContainer.style = 'position:absolute; bottom:80px; left:20px; background:var(--glass-bg); padding:10px; border-radius:12px; border:1px solid var(--glass-border); display:flex; align-items:center; gap:10px; z-index:10;';
+            get('view-chat').appendChild(previewContainer);
+        }
+        
+        previewContainer.innerHTML = `
+            <img src="${e.target.result}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">
+            <button onclick="removeImage()" style="background:transparent; border:none; color:var(--text-dim); cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+        `;
+        showNotification("Vision System", "Image ready for Neural Analysis.", "success");
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    currentImageBase64 = null;
+    currentImageMimeType = null;
+    const previewContainer = get('image-preview-container');
+    if (previewContainer) previewContainer.remove();
+}
+
+function toggleVoiceRecording() {
+    if (isRecording) {
+        isRecording = false;
+        showNotification("Voice System", "Audio transmission ended. Processing...", "info");
+        get('user-input').placeholder = "Type your command...";
+        // Simulate voice-to-text
+        setTimeout(() => {
+            setInput("Optimize the current architecture blueprint.");
+            sendMessage();
+        }, 1500);
+    } else {
+        isRecording = true;
+        showNotification("Voice System", "Listening... Speak your command.", "info");
+        get('user-input').placeholder = "Listening... (Click mic to stop)";
+    }
+}
