@@ -104,7 +104,7 @@
             <nav class="sidebar-nav">
                 <button class="nav-item active" onclick="showView('chat')"><i class="fa-solid fa-message"></i> Neural Chat</button>
                 <button class="nav-item" onclick="showView('projects')"><i class="fa-solid fa-folder-open"></i> Projects</button>
-                <button class="nav-item" onclick="showView('images')"><i class="fa-solid fa-wand-sparkles"></i> Image Studio</button>
+                <button class="nav-item" onclick="showView('images')"><i class="fa-solid fa-wand-sparkles"></i> Image Studio <span style="font-size:8px; background:var(--accent); color:white; padding:2px 5px; border-radius:4px; margin-left:auto;">NEW</span></button>
                 <button class="nav-item" onclick="showView('tools')"><i class="fa-solid fa-cubes"></i> AI Apps</button>
                 <button class="nav-item" onclick="showView('settings')"><i class="fa-solid fa-sliders"></i> Settings</button>
             </nav>
@@ -117,13 +117,21 @@
             </div>
 
             <div class="sidebar-footer" style="margin-top:auto; padding-top:20px; border-top:1px solid var(--glass-border);">
-                <div style="padding: 0 10px; margin-bottom: 15px;">
+                <div style="padding: 0 10px; margin-bottom: 20px;">
                     <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
-                        <span style="color:var(--text-dim);">Credits Remaining</span>
-                        <span style="color:var(--accent); font-weight:700;">1,250</span>
+                        <span style="color:var(--text-dim);">Neural Health</span>
+                        <span style="color:#10b981; font-weight:700;">STABLE</span>
                     </div>
-                    <div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px;">
-                        <div style="width:65%; height:100%; background:var(--accent); border-radius:2px;"></div>
+                    <div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; display:flex; gap:2px;">
+                        <div style="flex:1; height:100%; background:#10b981; border-radius:2px;"></div>
+                        <div style="flex:1; height:100%; background:#10b981; border-radius:2px;"></div>
+                        <div style="flex:1; height:100%; background:#10b981; border-radius:2px;"></div>
+                        <div style="flex:1; height:100%; background:#10b981; border-radius:2px;"></div>
+                        <div style="flex:1; height:100%; background:rgba(255,255,255,0.1); border-radius:2px;"></div>
+                    </div>
+                    <div style="font-size:9px; color:var(--text-dim); margin-top:8px; display:flex; align-items:center; gap:5px;">
+                        <i class="fa-solid fa-microchip" style="font-size:10px;"></i>
+                        <span>Latency: 24ms | Uptime: 99.9%</span>
                     </div>
                 </div>
                 
@@ -403,6 +411,7 @@
                         <div class="glass-panel" style="padding:0; overflow:hidden; border-radius:20px;">
                             <div class="setting-row-pro" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i> <span>Dark Mode / Light Mode</span> <i class="fa-solid fa-chevron-right"></i></div>
                             <div class="setting-row-pro" onclick="showNotification('Language', 'Language set to Neural Adaptive.', 'info')"><i class="fa-solid fa-language"></i> <span>Language</span> <i class="fa-solid fa-chevron-right"></i></div>
+                            <div class="setting-row-pro" onclick="showNotification('Update', 'Neural OS is up to date (v3.0.0 Pro).', 'success')"><i class="fa-solid fa-cloud-arrow-up"></i> <span>Check for Updates</span> <i class="fa-solid fa-chevron-right"></i></div>
                             <div class="setting-row-pro" onclick="showNotification('Security', 'Encryption node healthy.', 'success')"><i class="fa-solid fa-lock"></i> <span>Security</span> <i class="fa-solid fa-chevron-right"></i></div>
                             <div class="setting-row-pro" onclick="showNotification('About', 'Nexus AI Ultra v3.0 Pro Edition. Developed by Ankit Antigravity.', 'info')"><i class="fa-solid fa-circle-info"></i> <span>About</span> <i class="fa-solid fa-chevron-right"></i></div>
                         </div>
