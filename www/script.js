@@ -172,6 +172,13 @@ async function processAIResponse(prompt, image) {
                 await new Promise(r => setTimeout(r, 10));
             }
             speakResponse(answer);
+            
+            // Add copy button
+            const actions = document.createElement('div');
+            actions.className = 'message-actions';
+            actions.style.cssText = 'margin-top:10px; display:flex; gap:10px; opacity:0.6;';
+            actions.innerHTML = `<button onclick="copyToClipboard(this)" style="background:none; border:none; color:white; cursor:pointer; font-size:10px;"><i class="fa-solid fa-copy"></i> Copy</button>`;
+            content.appendChild(actions);
         }
     } catch (e) {
         fullResponse = `### ❌ Connection Interrupted\nUnable to reach the neural node. Please check your data transmission.`;
@@ -228,6 +235,7 @@ async function startVision() {
         const video = get('vision-video');
         visionStream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = visionStream;
+        window.activeStream = visionStream;
         showNotification("Vision Node", "Camera hardware synchronized.", "success");
     } catch (e) {
         showNotification("Access Denied", "Camera permissions required for vision node.", "error");
@@ -267,11 +275,19 @@ function handleHashChange() {
 }
 
 function showView(viewName) {
+    // Stop any active camera streams when leaving vision view
+    if (window.activeStream) {
+        window.activeStream.getTracks().forEach(track => track.stop());
+        window.activeStream = null;
+    }
+
     const views = document.querySelectorAll('.app-view');
     views.forEach(v => v.classList.remove('active'));
     
     const target = get(`view-${viewName}`);
-    if (target) target.classList.add('active');
+    if (target) {
+        target.classList.add('active');
+    }
     
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
@@ -283,8 +299,11 @@ function showView(viewName) {
         }
     });
 
-    if (viewName === 'vision') startVision(); else stopVision();
-    if (window.innerWidth <= 1024) get('sidebar').classList.remove('active');
+    // Close sidebar on mobile after navigation
+    if (window.innerWidth <= 1024) {
+        get('sidebar').classList.remove('active');
+        document.querySelector('.sidebar-overlay')?.classList.remove('active');
+    }
 }
 
 // --- Session Management ---
@@ -430,4 +449,25 @@ function selectModel(name) {
 
 function scrollToBottom() {
     chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+}
+
+function copyToClipboard(btn) {
+    const parent = btn.closest('.ai-msg');
+    const text = parent ? parent.querySelector('span').innerText : "";
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => btn.innerHTML = original, 2000);
+    });
+}
+
+function clearChatHistory() {
+    if (confirm("Erase all neural memory nodes? This cannot be undone.")) {
+        chatSessions = [];
+        saveSessions();
+        get('chat-messages').innerHTML = '';
+        renderHistory();
+        showNotification('Neural Memory', 'History purged successfully.', 'success');
+    }
 }

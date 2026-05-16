@@ -435,3 +435,18 @@ h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 800; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* Responsive Utilities */
+.mobile-only { display: none !important; }
+@media (max-width: 1024px) {
+    .mobile-only { display: flex !important; }
+    .desktop-only { display: none !important; }
+}
+
+/* Animations */
+@keyframes healthPulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+.health-bar-pulse { animation: healthPulse 2s infinite ease-in-out; }
