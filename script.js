@@ -140,6 +140,7 @@ async function processAIResponse(prompt, image) {
     const content = document.createElement('div');
     content.className = 'message-content ai-msg';
     const textSpan = document.createElement('span');
+    textSpan.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent);"></i> Thinking...';
     content.appendChild(textSpan);
     row.appendChild(content);
     chatContent.appendChild(row);
@@ -150,42 +151,66 @@ async function processAIResponse(prompt, image) {
 
     try {
         const lowerPrompt = cleanPrompt.toLowerCase();
-        const isImageRequest = /image|photo|picture|draw|banao|dikhao|paint|generate/.test(lowerPrompt);
-        
+        const isImageRequest = /\b(image|photo|picture|draw|paint|generate|banao|dikhao|bana|tasveer)\b/.test(lowerPrompt);
+
         if (isImageRequest) {
-            const encodedPrompt = encodeURIComponent(cleanPrompt + " cinematic, hyper-realistic, 8k, detailed");
-            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
-            fullResponse = `### 🎨 Nexus Studio: Render Complete\n\n![Generated Image](${imageUrl})\n\n*Prompt: ${cleanPrompt}*`;
-            textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
-            speakResponse("I have generated the image for you.");
+            const encodedPrompt = encodeURIComponent(cleanPrompt + ", cinematic, 8k, ultra detailed");
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+            fullResponse = `### 🎨 Image Generated!\n\n![Generated Image](${imageUrl})\n\n*"${cleanPrompt}"*`;
+            textSpan.innerHTML = marked.parse(fullResponse);
+            speakResponse("Your image is ready.");
         } else {
             const dateStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let systemPrompt = `You are Nexus AI Ultra v3.5 (ULTIMATE Edition), a state-of-the-art neural intelligence developed by Ankit Antigravity. Today is ${dateStr}. You are an expert in complex reasoning, creative synthesis, and Indian cultural linguistics (including Sanskrit). Provide detailed, professional, and insightful responses. User query: `;
-            const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(systemPrompt + cleanPrompt)}?model=openai`;
 
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error("API_ERROR");
-            
-            const answer = await response.text();
+            // Use correct Pollinations Chat API (POST)
+            const apiResponse = await fetch('https://text.pollinations.ai/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'openai',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are Nexus AI Ultra v3.5, a state-of-the-art neural intelligence. Today is ${dateStr}. You are an expert in reasoning, coding, science, and Indian linguistics including Sanskrit and Hindi. Give clear, detailed, and friendly responses.`
+                        },
+                        { role: 'user', content: cleanPrompt }
+                    ]
+                })
+            });
+
+            let answer = '';
+            if (apiResponse.ok) {
+                const data = await apiResponse.json();
+                answer = data?.choices?.[0]?.message?.content || data?.output || await apiResponse.text();
+            } else {
+                // Fallback: simple GET endpoint
+                const fallback = await fetch(`https://text.pollinations.ai/${encodeURIComponent(cleanPrompt)}`);
+                answer = await fallback.text();
+            }
+
+            if (!answer || answer.trim() === '') throw new Error('Empty response');
+
+            // Stream word by word
+            textSpan.innerHTML = '';
             const words = answer.split(' ');
             for (const word of words) {
-                fullResponse += word + " ";
-                textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
+                fullResponse += word + ' ';
+                textSpan.innerHTML = marked.parse(fullResponse);
                 scrollToBottom();
-                await new Promise(r => setTimeout(r, 10));
+                await new Promise(r => setTimeout(r, 12));
             }
             speakResponse(answer);
-            
-            // Add copy button
+
+            // Copy button
             const actions = document.createElement('div');
-            actions.className = 'message-actions';
-            actions.style.cssText = 'margin-top:10px; display:flex; gap:10px; opacity:0.6;';
-            actions.innerHTML = `<button onclick="copyToClipboard(this)" style="background:none; border:none; color:white; cursor:pointer; font-size:10px;"><i class="fa-solid fa-copy"></i> Copy</button>`;
+            actions.style.cssText = 'margin-top:8px; display:flex; gap:10px;';
+            actions.innerHTML = `<button onclick="navigator.clipboard.writeText(this.closest('.ai-msg').querySelector('.text-body, span').innerText); this.innerHTML='<i class=\\'fa-solid fa-check\\'></i> Copied!'; setTimeout(()=>this.innerHTML='<i class=\\'fa-regular fa-copy\\'></i> Copy',2000);" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.6); cursor:pointer; font-size:11px; padding:4px 10px; border-radius:8px;"><i class="fa-regular fa-copy"></i> Copy</button>`;
             content.appendChild(actions);
         }
     } catch (e) {
-        fullResponse = `### ❌ Connection Interrupted\nUnable to reach the neural node. Please check your data transmission.`;
-        textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
+        console.error('AI Error:', e);
+        fullResponse = `❌ **Connection Failed**\n\nCould not reach the AI server. Please check your internet connection and try again.`;
+        textSpan.innerHTML = marked.parse(fullResponse);
     }
 
     const session = chatSessions.find(s => s.id === currentSessionId);
