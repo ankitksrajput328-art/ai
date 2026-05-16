@@ -53,22 +53,45 @@ Remember previous conversation context. If the user writes in Hindi, reply in Hi
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey) {
     try {
-      // Convert messages to Gemini format
-      const geminiContents = history.map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }]
-      }));
-      geminiContents.push({ role: 'user', parts: [{ text: systemMsg + '\n\n' + userPrompt }] });
+      // Fix history mapping for Gemini strictly alternating user/model
+      let geminiHistory = [];
+      for (let i = 0; i < history.length; i++) {
+        let m = history[i];
+        let role = m.role === 'assistant' ? 'model' : 'user';
+        if (geminiHistory.length > 0 && geminiHistory[geminiHistory.length-1].role === role) {
+           geminiHistory[geminiHistory.length-1].parts[0].text += "\\n" + m.content;
+        } else {
+           geminiHistory.push({ role: role, parts: [{ text: m.content }] });
+        }
+      }
+      
+      // Ensure the last message in history isn't also a 'user' if we're adding userPrompt
+      if (geminiHistory.length > 0 && geminiHistory[geminiHistory.length-1].role === 'user') {
+          geminiHistory.push({ role: 'model', parts: [{ text: 'Understood.' }] });
+      }
+
+      geminiHistory.push({ role: 'user', parts: [{ text: userPrompt }] });
+
+      const requestBody = {
+        system_instruction: { parts: [{ text: systemMsg }] },
+        contents: geminiHistory
+      };
 
       const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: geminiContents })
+        body: JSON.stringify(requestBody)
       });
+      
       if (gr.ok) {
         const gd = await gr.json();
         const text = gd?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) return res.status(200).json({ reply: text, provider: 'gemini' });
+      } else {
+        const errorText = await gr.text();
+        console.error('Gemini API Error Response:', errorText);
+        // If it's a structural error, just return the error text to debug
+        // return res.status(500).json({ reply: 'API Error: ' + errorText });
       }
     } catch (e) { console.error('Gemini failed:', e.message); }
   }
