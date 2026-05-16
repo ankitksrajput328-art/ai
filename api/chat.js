@@ -42,12 +42,19 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
 
   // Final Attempt: Robust Public Fallback (Ensures zero downtime)
   try {
-    const fallbackResponse = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?system=${encodeURIComponent(systemMsg)}`);
+    const fallbackResponse = await fetch('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }],
+        model: 'openai'
+      })
+    });
     if (fallbackResponse.ok) {
       const text = await fallbackResponse.text();
       if (text) return res.status(200).json({ reply: text, provider: 'nexus-neural-core' });
     }
   } catch (e) {}
 
-  return res.status(500).json({ reply: "⚠️ **Neural Transmission Interrupted:** Please check your Vercel logs and API configurations." });
+  return res.status(500).json({ reply: "⚠️ **System Critical Error:** All Neural Nodes are failing. Please verify your GEMINI_API_KEY in Vercel settings." });
 }
