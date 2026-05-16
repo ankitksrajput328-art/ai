@@ -152,8 +152,8 @@ async function processAIResponse(prompt, image) {
     chatContent.appendChild(row);
     scrollToBottom();
 
-    // Show Thinking Dots
-    textSpan.innerHTML = '<div class="thinking-dots"><span>.</span><span>.</span><span>.</span></div>';
+    // Show Shimmering Thinking Dots
+    textSpan.innerHTML = '<div class="thinking-dots"><div></div><div></div><div></div></div>';
     scrollToBottom();
 
     let fullResponse = "";
