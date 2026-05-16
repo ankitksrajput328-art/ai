@@ -7,7 +7,13 @@ window.onerror = function(m,u,l,c,e){ console.error('Nexus Error:',m,u,l); retur
 // --- Global Variables ---
 let currentImageBase64 = null;
 let currentImageMimeType = null;
-let chatSessions = JSON.parse(localStorage.getItem('nexus_sessions')) || [];
+let chatSessions = [];
+try {
+    chatSessions = JSON.parse(localStorage.getItem('nexus_sessions')) || [];
+} catch(e) {
+    chatSessions = [];
+    console.error('Failed to parse sessions');
+}
 let currentSessionId = localStorage.getItem('nexus_current_id') || null;
 let isRecording = false;
 let recognition = null;
