@@ -119,7 +119,7 @@ async function processAIResponse(prompt, image) {
         step.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${s}`;
     }
 
-    // 2. Prepare AI Message Row for Streaming
+    // 2. Prepare AI Message Row
     const row = document.createElement('div');
     row.className = 'message-row ai';
     const content = document.createElement('div');
@@ -132,51 +132,32 @@ async function processAIResponse(prompt, image) {
     let fullResponse = "";
     
     try {
-        // Attempt Real Backend Connection
-        const response = await fetch('http://localhost:8000/chat/stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: "commander_ankit",
-                prompt: prompt,
-                history: chatSessions.find(s => s.id === currentSessionId)?.messages || []
-            })
-        });
-
-        if (!response.ok) throw new Error("Backend offline");
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const word = line.replace('data: ', '').trim();
-                    fullResponse += word + " ";
-                    textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
-                    scrollToBottom();
-                }
-            }
-        }
-    } catch (e) {
-        console.warn("Backend connection failed, using local simulation mode.");
-        // Fallback to Simulated Streaming
-        const mock = await getMockResponse(prompt);
-        const words = mock.split(' ');
+        // Build Context
+        let context = "You are Nexus AI Ultra. Be highly professional, smart, and concise. You can understand and reply in any language including Sanskrit, Hindi, English, etc. The user says: ";
+        
+        // Free Text AI Endpoint (Zero Auth)
+        const encodedPrompt = encodeURIComponent(context + prompt);
+        const apiUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai`;
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("API Offline");
+        
+        const answer = await response.text();
+        
+        // Typewriter effect
+        const words = answer.split(' ');
         for (const word of words) {
             fullResponse += word + " ";
             textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
             scrollToBottom();
-            await new Promise(r => setTimeout(r, 30));
+            await new Promise(r => setTimeout(r, 20));
         }
+    } catch (e) {
+        fullResponse = "### ❌ Neural Transmission Failed\nI am currently operating in restricted mode. The global neural network is unreachable.";
+        textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
     }
 
-    // Add Copy Button after streaming is done
+    // Add Copy Button
     const copyBtn = document.createElement('button');
     copyBtn.className = 'copy-btn';
     copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
@@ -188,35 +169,10 @@ async function processAIResponse(prompt, image) {
     content.appendChild(copyBtn);
 
     // Update Session
-    const session = chatSessions.find(s => s.id === currentSessionId);
-    if (session) session.messages.push({ text: fullResponse, isUser: false });
+    const sess = chatSessions.find(s => s.id === currentSessionId);
+    if (sess) sess.messages.push({ text: fullResponse, isUser: false });
     saveSessions();
     updateHistorySidebar();
-}
-
-async function getMockResponse(prompt) {
-    const lower = prompt.toLowerCase();
-    if (lower.includes('vision')) return "I have activated my **Neural Vision** clusters. You can use the 'Vision' tab to scan objects in real-time. I can identify patterns, extract text, and analyze spatial geometry with 99.8% accuracy.";
-    if (lower.includes('video')) return "My **Studio Engine** is ready. Switch to the 'Studio' view to render high-definition cinematic content. Our new V2.5 rendering pipeline supports temporal consistency and 4K upscaling.";
-    
-    // Pro Version: Real answers from Wikipedia API
-    try {
-        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(prompt)}&utf8=&format=json&origin=*`;
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
-        
-        if (searchData.query && searchData.query.search.length > 0) {
-            const topResult = searchData.query.search[0];
-            const title = topResult.title;
-            const snippet = topResult.snippet.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML tags
-            
-            return `### 🌐 Nexus Real-Time Research: **${title}**\n\n${snippet}...\n\n*Would you like me to dive deeper into this topic?*`;
-        } else {
-            return `I couldn't find a definitive answer for "${prompt}" in my current primary knowledge banks. However, my neural clusters suggest we could approach this by breaking it down. Can you provide more context?`;
-        }
-    } catch (e) {
-        return `### 🌐 Nexus Intelligence Synthesis\nI have processed your query: "${prompt}".\n\n**System Alert:** Live web access is currently degraded. Utilizing offline heuristics to synthesize an answer.`;
-    }
 }
 
 // --- UI Helpers ---
