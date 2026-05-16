@@ -152,6 +152,10 @@ async function processAIResponse(prompt, image) {
     chatContent.appendChild(row);
     scrollToBottom();
 
+    // Show Thinking Dots
+    textSpan.innerHTML = '<div class="thinking-dots"><span>.</span><span>.</span><span>.</span></div>';
+    scrollToBottom();
+
     let fullResponse = "";
     const cleanPrompt = prompt.trim();
 
