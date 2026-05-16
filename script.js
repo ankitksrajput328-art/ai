@@ -158,7 +158,7 @@ async function processAIResponse(prompt, image) {
             const encodedPrompt = encodeURIComponent(cleanPrompt + ", ultra detailed, cinematic, 8k");
             const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
             fullResponse = `### 🎨 Image Generated!\n\n![Generated Image](${imageUrl})\n\n*"${cleanPrompt}"*`;
-            textSpan.innerHTML = marked.parse(fullResponse);
+            textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
             speakResponse("Your image is ready.");
         } else {
             let answer = '';
@@ -207,7 +207,7 @@ async function processAIResponse(prompt, image) {
             let streamed = '';
             for (const word of words) {
                 streamed += word + ' ';
-                textSpan.innerHTML = marked.parse(streamed);
+                textSpan.innerHTML = window.marked ? marked.parse(streamed) : streamed;
                 scrollToBottom();
                 await new Promise(r => setTimeout(r, 15));
             }
@@ -223,7 +223,7 @@ async function processAIResponse(prompt, image) {
     } catch (e) {
         console.error('AI Error:', e);
         fullResponse = generateSmartFallback(cleanPrompt);
-        textSpan.innerHTML = marked.parse(fullResponse);
+        textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
     }
 
     const session = chatSessions.find(s => s.id === currentSessionId);
