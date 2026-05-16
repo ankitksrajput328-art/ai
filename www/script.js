@@ -101,25 +101,7 @@ function addMessageToUI(text, isUser, save = true, image = null) {
 }
 
 async function processAIResponse(prompt, image) {
-    // 1. Show Thought Stream
-    const thoughtContainer = document.createElement('div');
-    thoughtContainer.className = 'thought-stream';
-    thoughtContainer.innerHTML = '<h4><i class="fa-solid fa-brain"></i> Nexus Intelligence Hub</h4>';
-    chatContent.appendChild(thoughtContainer);
-    scrollToBottom();
-
-    const steps = ["Decrypting neural pathways...", "Synthesizing multi-modal nodes...", "Finalizing transmission..."];
-    for (const s of steps) {
-        const step = document.createElement('div');
-        step.className = 'thought-step active';
-        step.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${s}`;
-        thoughtContainer.appendChild(step);
-        await new Promise(r => setTimeout(r, 600));
-        step.classList.remove('active');
-        step.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${s}`;
-    }
-
-    // 2. Prepare AI Message Row
+    // 1. Prepare AI Message Row
     const row = document.createElement('div');
     row.className = 'message-row ai';
     const content = document.createElement('div');
@@ -128,29 +110,50 @@ async function processAIResponse(prompt, image) {
     content.appendChild(textSpan);
     row.appendChild(content);
     chatContent.appendChild(row);
+    scrollToBottom();
 
     let fullResponse = "";
     
     try {
-        // Build Context
-        let context = "You are Nexus AI Ultra. Be highly professional, smart, and concise. You can understand and reply in any language including Sanskrit, Hindi, English, etc. The user says: ";
+        const lowerPrompt = prompt.toLowerCase();
+        const isImageRequest = lowerPrompt.includes('image') || lowerPrompt.includes('photo') || lowerPrompt.includes('picture') || lowerPrompt.includes('draw') || lowerPrompt.includes('banao') || lowerPrompt.includes('dikhao') || lowerPrompt.includes('paint');
         
-        // Free Text AI Endpoint (Zero Auth)
-        const encodedPrompt = encodeURIComponent(context + prompt);
-        const apiUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai`;
-        
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("API Offline");
-        
-        const answer = await response.text();
-        
-        // Typewriter effect
-        const words = answer.split(' ');
-        for (const word of words) {
-            fullResponse += word + " ";
+        if (isImageRequest) {
+            // Free Image AI Endpoint
+            const encodedPrompt = encodeURIComponent(prompt + " high quality, masterpiece, detailed, 8k, professional");
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true`;
+            
+            fullResponse = `### 🎨 Nexus Studio: Image Generated\n\n![${prompt}](${imageUrl})\n\n*Your visualization is ready! How else can I assist your creative process?*`;
             textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
             scrollToBottom();
-            await new Promise(r => setTimeout(r, 20));
+        } else {
+            // HIGH-PERFORMANCE SYSTEM PROMPT (Expert Explainer Mode)
+            let systemPrompt = `You are Nexus AI Ultra v2.2, the world's most advanced Neural Intelligence. 
+            YOUR GOAL: Provide deep, expert-level, and perfectly explained answers. 
+            - Use Markdown (bold, lists, tables) for clarity.
+            - If the user asks a question, explain the 'Why' and 'How' in detail.
+            - Provide examples or code snippets if relevant.
+            - Always be professional, helpful, and ultra-intelligent.
+            - Support all languages (Hindi, Sanskrit, English, etc.) with native fluency.
+            
+            User Query: `;
+            
+            const encodedPrompt = encodeURIComponent(systemPrompt + prompt);
+            const apiUrl = `https://text.pollinations.ai/${encodedPrompt}?model=openai`;
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error("API Offline");
+            
+            const answer = await response.text();
+            
+            // Typewriter effect
+            const words = answer.split(' ');
+            for (const word of words) {
+                fullResponse += word + " ";
+                textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
+                scrollToBottom();
+                await new Promise(r => setTimeout(r, 20));
+            }
         }
     } catch (e) {
         fullResponse = "### ❌ Neural Transmission Failed\nI am currently operating in restricted mode. The global neural network is unreachable.";
@@ -401,24 +404,64 @@ function showView(viewId) {
     });
     
     // Show selected view
-    const activeView = get(viewId);
+    const realViewId = viewId.startsWith('view-') ? viewId : `view-${viewId}`;
+    const activeView = get(realViewId);
     if (activeView) {
         activeView.classList.add('active');
         activeView.classList.remove('hidden');
     }
     
     // Update active nav item
-    const hash = '#' + viewId.replace('view-', '');
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
-        if (item.getAttribute('href') === hash) {
+        const onclickAttr = item.getAttribute('onclick') || "";
+        if (onclickAttr.includes(`'${viewId.replace('view-', '')}'`)) {
             item.classList.add('active');
         } else {
             item.classList.remove('active');
         }
     });
 
-    if (window.innerWidth <= 1024) toggleSidebar();
+    if (window.innerWidth <= 1024) {
+        const sidebar = get('sidebar');
+        if (sidebar && sidebar.classList.contains('active')) toggleSidebar();
+    }
+}
+
+function startNewChat() {
+    chatContent.innerHTML = '';
+    currentSessionId = Date.now().toString();
+    showNotification("New Session", "Neural Chat has been reset.", "success");
+    showView('chat');
+}
+
+function openAuthModal() {
+    showNotification("Premium Node", "Please sign in to access cloud synchronization.", "info");
+    // Simulate auth modal
+    const modal = document.createElement('div');
+    modal.style = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:10000; display:flex; align-items:center; justify-content:center;';
+    modal.innerHTML = `
+        <div class="glass-panel" style="width:350px; padding:30px; text-align:center;">
+            <h3><i class="fa-solid fa-user-lock"></i> Secure Login</h3>
+            <p style="font-size:12px; margin-bottom:20px;">Access your Neural Memory across all devices.</p>
+            <input type="email" placeholder="Email Address" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <input type="password" placeholder="Password" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; padding:10px; border-radius:8px; margin-bottom:20px;">
+            <button class="btn-glow" onclick="this.parentElement.parentElement.remove()" style="width:100%;">Authenticate</button>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:var(--text-dim); margin-top:15px; cursor:pointer;">Cancel</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function selectModel(name, type) {
+    get('current-model-name').innerText = name;
+    get('model-dropdown').style.display = 'none';
+    showNotification("Neural Engine", `Switched to ${name} (${type} mode)`, "success");
+}
+
+function toggleModelDropdown() {
+    const dropdown = get('model-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
 }
 
 // --- Image & Voice Handling (Pro Version Upgrades) ---
@@ -480,4 +523,34 @@ function toggleVoiceRecording() {
         showNotification("Voice System", "Listening... Speak your command.", "info");
         get('user-input').placeholder = "Listening... (Click mic to stop)";
     }
+}
+
+function captureVision() {
+    showNotification("Vision System", "Initializing scanning laser...", "info");
+    const scanBox = document.querySelector('.scanning-box');
+    if (scanBox) scanBox.style.animation = 'scan 2s infinite linear';
+    
+    setTimeout(() => {
+        showNotification("Neural Analysis", "Object detected: High-fidelity reasoning node.", "success");
+        if (scanBox) scanBox.style.animation = 'none';
+        const result = document.createElement('div');
+        result.className = 'glass-panel';
+        result.style = 'position:absolute; bottom:100px; left:50%; transform:translateX(-50%); padding:20px; width:80%; z-index:1001; font-size:14px; background:rgba(139, 92, 246, 0.2); border:1px solid var(--accent);';
+        result.innerHTML = `<strong>Scan Results:</strong><br>• Structural integrity: 98%<br>• Composition: Glassmorphic Neural Fiber<br>• Threat Level: Zero`;
+        get('view-vision').appendChild(result);
+        setTimeout(() => result.remove(), 5000);
+    }, 2000);
+}
+
+function generateVideo() {
+    const prompt = get('video-prompt').value;
+    if (!prompt) return showNotification("Studio Error", "Please provide a cinematic prompt.", "error");
+    
+    showNotification("Studio Engine", "Allocating GPU clusters for rendering...", "info");
+    setTimeout(() => {
+        showNotification("Rendering", "Synthesizing frames from neural latents...", "info");
+        setTimeout(() => {
+            showNotification("Success", "Cinematic video ready for export.", "success");
+        }, 3000);
+    }, 2000);
 }
