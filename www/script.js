@@ -703,3 +703,39 @@ function handleGoogleLogin() {
     }
 }
 
+
+// --- Cloud Database Sync Logic ---
+function syncToCloud() {
+    if (auth && auth.currentUser && db) {
+        db.ref('users/' + auth.currentUser.uid + '/chats').set(chatSessions)
+            .catch(err => console.log('Cloud sync error:', err));
+    }
+}
+
+// Override local save to also sync to cloud
+const originalSave = saveSessions;
+saveSessions = function() {
+    originalSave(); // save locally first
+    syncToCloud();  // then push to Firebase
+};
+
+// Fetch from cloud on login
+if (auth) {
+    auth.onAuthStateChanged(user => {
+        if (user && db) {
+            db.ref('users/' + user.uid + '/chats').once('value').then(snapshot => {
+                const cloudData = snapshot.val();
+                if (cloudData) {
+                    chatSessions = cloudData;
+                    localStorage.setItem('nexus_sessions', JSON.stringify(chatSessions));
+                    renderHistory();
+                    if (!currentSessionId && chatSessions.length > 0) {
+                        loadSession(chatSessions[0].id);
+                    }
+                    showNotification('Cloud Sync', 'Your chat history has been restored', 'success');
+                }
+            });
+        }
+    });
+}
+
