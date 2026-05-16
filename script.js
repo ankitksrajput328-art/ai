@@ -38,6 +38,7 @@ window.onload = () => {
     if (localStorage.getItem('nexus_theme') === 'light') {
         document.body.classList.add('light-theme');
     }
+    updateVoiceIcon();
     
     // Initialize Voice Recognition if supported
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -287,13 +288,42 @@ function stopVoiceRecording() {
     if (userInput.value) sendMessage();
 }
 
+let voiceEnabled = localStorage.getItem('nexus_voice') !== 'false'; // Default ON
+
+function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    localStorage.setItem('nexus_voice', voiceEnabled);
+    showNotification("Neural Voice", voiceEnabled ? "Voice Output: ON" : "Voice Output: OFF", "info");
+    if (!voiceEnabled) window.speechSynthesis.cancel();
+    updateVoiceIcon();
+}
+
+function updateVoiceIcon() {
+    const btn = document.getElementById('voice-toggle-btn');
+    if (btn) {
+        btn.innerHTML = voiceEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+        btn.style.color = voiceEnabled ? 'var(--accent)' : 'var(--text-dim)';
+    }
+}
+
 function speakResponse(text) {
-    if (!window.speechSynthesis) return;
+    if (!voiceEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[#*`_]/g, '').substring(0, 200); // Limit speech length
+    const cleanText = text.replace(/[#*`_]/g, '');
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = get('voice-lang-select').value || 'en-US';
-    utterance.rate = 1.1;
+    
+    // Auto-detect language (Simplified)
+    const hasHindi = /[\u0900-\u097F]/.test(text);
+    utterance.lang = hasHindi ? 'hi-IN' : (get('voice-lang-select')?.value || 'en-US');
+    
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    
+    // Select premium voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const premiumVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Premium'));
+    if (premiumVoice) utterance.voice = premiumVoice;
+    
     window.speechSynthesis.speak(utterance);
 }
 
@@ -325,10 +355,61 @@ function captureVision() {
 function generateVideo() {
     const prompt = get('video-prompt').value;
     if (!prompt) return showNotification("Studio", "Describe the scene first.", "warning");
-    showNotification("Studio", "Allocating GPU clusters...", "info");
-    setTimeout(() => {
-        showNotification("Success", "Cinematic render queued for export.", "success");
-    }, 3000);
+    
+    const studioView = get('view-studio');
+    const originalContent = studioView.innerHTML;
+    
+    studioView.innerHTML = `
+        <div class="glass-panel" style="max-width:800px; margin:40px auto; padding:60px; text-align:center;">
+            <div class="neural-spinner" style="width:100px; height:100px; border:4px solid var(--accent); border-top-color:transparent; border-radius:50%; margin:0 auto 30px; animation:spin 1s linear infinite;"></div>
+            <h3 class="gradient-text" style="font-size:24px;">Neural Rendering in Progress</h3>
+            <p style="color:var(--text-dim); margin-top:15px;">Allocating GPU Clusters & Synthesizing Cinematic Frames...</p>
+            <div style="width:100%; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:40px; overflow:hidden;">
+                <div id="render-progress" style="width:0%; height:100%; background:var(--accent); transition:width 0.5s ease;"></div>
+            </div>
+            <div id="render-status" style="font-size:12px; color:var(--accent); margin-top:10px; text-transform:uppercase;">Initializing Pipeline...</div>
+        </div>
+    `;
+
+    let progress = 0;
+    const statuses = ["Allocating VRAM...", "Tracing Rays...", "Synthesizing Motion...", "Finalizing Export..."];
+    const interval = setInterval(() => {
+        progress += 5;
+        const progressEl = document.getElementById('render-progress');
+        const statusEl = document.getElementById('render-status');
+        if (progressEl) progressEl.style.width = progress + '%';
+        if (statusEl) statusEl.innerText = statuses[Math.floor(progress/30)] || "Encoding...";
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            showNotification("Success", "Cinematic Render Complete", "success");
+            setTimeout(() => { studioView.innerHTML = originalContent; }, 2000);
+        }
+    }, 300);
+}
+
+// --- AI Voice Synthesis ---
+let voiceEnabled = localStorage.getItem('nexus_voice') === 'true';
+
+function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    localStorage.setItem('nexus_voice', voiceEnabled);
+    showNotification("Neural Voice", voiceEnabled ? "Voice Output: ON" : "Voice Output: OFF", "info");
+    if (!voiceEnabled) window.speechSynthesis.cancel();
+}
+
+function speakText(text) {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.replace(/[*#]/g, ''));
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.8;
+    // Prefer professional English voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const prefVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
+    if (prefVoice) utterance.voice = prefVoice;
+    window.speechSynthesis.speak(utterance);
 }
 
 // --- Router & Views ---

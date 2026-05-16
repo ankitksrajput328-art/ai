@@ -149,6 +149,7 @@
                         <div class="model-option" role="option" onclick="selectModel('GPT-4o', 'Advanced')">GPT-4o</div>
                     </div>
                     <div class="header-actions" style="display:flex; gap:10px;">
+                        <button id="voice-toggle-btn" class="icon-btn" onclick="toggleVoice()" title="Toggle Neural Voice"><i class="fa-solid fa-volume-high"></i></button>
                         <button class="icon-btn" onclick="clearChatHistory()" title="Clear Neural Memory"><i class="fa-solid fa-trash-can"></i></button>
                         <button class="icon-btn" onclick="showNotification('Encryption', 'Point-to-point encryption active.', 'success')"><i class="fa-solid fa-shield-halved"></i></button>
                         <button class="btn-glow" onclick="startNewChat()" aria-label="Start New Chat"><i class="fa-solid fa-plus"></i> <span class="desktop-only">New Chat</span></button>
