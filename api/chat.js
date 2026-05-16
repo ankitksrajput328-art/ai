@@ -6,42 +6,29 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const { prompt } = req.body || {};
+  const { prompt, history = [], webSearch = false } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt required' });
 
-  const systemMsg = 'You are Nexus AI Ultra, a brilliant and helpful AI assistant. Answer clearly and helpfully. If the user writes in Hindi, reply in Hindi. If English, reply in English. Be friendly, detailed, and knowledgeable.';
+  let systemMsg = `You are an advanced AI assistant like ChatGPT. 
+You answer deeply, clearly, intelligently and step-by-step.
+Always understand user intent. Give smart suggestions. Explain in easy language.
+Remember previous conversation context. If the user writes in Hindi, reply in Hindi. If English, reply in English.`;
 
-  // Provider 1: Google Gemini (free, 15 req/min)
-  const geminiKey = process.env.GEMINI_API_KEY;
-  if (geminiKey) {
-    try {
-      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: systemMsg + '\n\nUser: ' + prompt }] }]
-        })
-      });
-      if (gr.ok) {
-        const gd = await gr.json();
-        const text = gd?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return res.status(200).json({ reply: text, provider: 'gemini' });
-      }
-    } catch (e) { console.error('Gemini failed:', e.message); }
+  let userPrompt = prompt;
+
+  if (webSearch) {
+    systemMsg += "\n[WEB SEARCH MODE ACTIVE] You have been asked to provide real-time or deep information. Provide comprehensive, up-to-date analysis.";
+    userPrompt = "Please search your knowledge base and provide a highly detailed, accurate response to: " + prompt;
   }
 
-  // Provider 2: Pollinations (free, no key)
-  try {
-    const ctrl = new AbortController();
-    setTimeout(() => ctrl.abort(), 8000);
-    const pr = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai`, { signal: ctrl.signal });
-    if (pr.ok) {
-      const text = await pr.text();
-      if (text && text.trim().length > 5) return res.status(200).json({ reply: text, provider: 'pollinations' });
-    }
-  } catch (e) { console.error('Pollinations failed:', e.message); }
+  // Format history for Gemini/Groq
+  const messages = [
+    { role: 'system', content: systemMsg },
+    ...history.map(m => ({ role: m.role || 'user', content: m.content })),
+    { role: 'user', content: userPrompt }
+  ];
 
-  // Provider 3: Groq (free tier)
+  // Provider 1: Groq (Llama 3 70B) - Fastest and smartest free API
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
     try {
@@ -50,8 +37,8 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
-          messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }],
-          max_tokens: 1024
+          messages: messages,
+          max_tokens: 2048
         })
       });
       if (qr.ok) {
@@ -62,7 +49,31 @@ export default async function handler(req, res) {
     } catch (e) { console.error('Groq failed:', e.message); }
   }
 
-  // Provider 4: Server-side intelligent fallback
+  // Provider 2: Google Gemini
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    try {
+      // Convert messages to Gemini format
+      const geminiContents = history.map(m => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }]
+      }));
+      geminiContents.push({ role: 'user', parts: [{ text: systemMsg + '\n\n' + userPrompt }] });
+
+      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: geminiContents })
+      });
+      if (gr.ok) {
+        const gd = await gr.json();
+        const text = gd?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return res.status(200).json({ reply: text, provider: 'gemini' });
+      }
+    } catch (e) { console.error('Gemini failed:', e.message); }
+  }
+
+  // Provider 3: Server-side intelligent fallback (if keys are missing)
   return res.status(200).json({ reply: getSmartReply(prompt), provider: 'local' });
 }
 
@@ -82,5 +93,5 @@ function getSmartReply(prompt) {
     return "🧠 Main **Nexus AI Ultra v3.5** hoon — ek state-of-the-art neural intelligence platform.\n\n**Mere features:**\n- 💬 Multi-lingual chat (Hindi + English)\n- 🎨 Image generation\n- 🔬 Deep research\n- 💻 Code generation\n- 🗣️ Voice interaction\n\nMujhse kuch bhi poochein! 🚀";
   if (/\b(thank|dhanyavad|shukriya|thanks)\b/.test(p))
     return "😊 Aapka swagat hai! Kuch aur help chahiye toh zaroor poochein. Main hamesha ready hoon! 🌟";
-  return `💡 **Nexus AI Ultra**\n\nAapka sawaal mila: "${prompt}"\n\nAbhi main AI server se connect ho raha hoon. Server busy hai toh thodi der mein dobara try karein.\n\n**Tip:** Aap ye pooch sakte hain:\n- \"What is AI?\"\n- \"Write Python code for...\"\n- \"Generate image of...\"\n- \"Explain quantum physics\"`;
+  return `💡 **Nexus AI Ultra**\n\nAapka sawaal mila: "${prompt}"\n\n[ADMIN ALERT]: Please add GEMINI_API_KEY or GROQ_API_KEY in Vercel to enable full Deep AI context. Without keys, I can only provide basic offline responses.`;
 }
