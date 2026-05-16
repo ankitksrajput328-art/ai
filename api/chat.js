@@ -97,25 +97,6 @@ Remember previous conversation context. If the user writes in Hindi/Hinglish, re
     } catch (e) { console.error('Gemini failed:', e.message); }
   }
 
-  // Provider 3: Server-side intelligent fallback (if keys are missing)
-  return res.status(200).json({ reply: getSmartReply(prompt), provider: 'local' });
-}
-
-function getSmartReply(prompt) {
-  const p = prompt.toLowerCase();
-  if (/\b(hi|hello|hey|namaste|namaskar)\b/.test(p))
-    return "👋 Namaste! Main Nexus AI Ultra hoon. Aap kuch bhi pooch sakte hain — coding, science, math, history, ya kuch bhi! Batayein, kaise madad karoon? 🚀";
-  if (/\b(ai|artificial intelligence)\b/.test(p))
-    return "🤖 **Artificial Intelligence (AI)** ek powerful technology hai.\n\n**Types:**\n- **Machine Learning** — Data se seekhna\n- **Deep Learning** — Neural networks use karna\n- **NLP** — Bhasha samajhna\n- **Computer Vision** — Images analyze karna\n- **Generative AI** — Naya content banana (jaise ChatGPT)\n\nAI aaj healthcare, finance, education, aur entertainment mein use ho raha hai. Nexus AI Ultra bhi ek advanced AI system hai! ✨";
-  if (/\b(weather|mausam)\b/.test(p))
-    return "🌤️ Main real-time weather data access nahi kar sakta abhi, lekin aap Google Weather ya weather.com check kar sakte hain. Koi aur sawaal ho toh zaroor poochein!";
-  if (/\b(code|coding|program|python|javascript|html)\b/.test(p))
-    return "💻 Main coding mein expert hoon! Aap mujhe specifically batayein:\n- Kaunsi language? (Python, JavaScript, HTML, etc.)\n- Kya banana hai?\n- Koi error fix karna hai?\n\nExample: \"Write a Python function to sort a list\" ya \"Fix this JavaScript code\" likh sakte hain!";
-  if (/\b(math|calculate|ganit)\b/.test(p))
-    return "🔢 Math problems solve karne ke liye mujhe specific question batayein! Jaise:\n- Algebra equations\n- Geometry formulas\n- Statistics\n- Calculus\n\nExample: \"Solve x^2 + 5x + 6 = 0\" likh sakte hain!";
-  if (/\b(who are you|kaun ho|kon ho|tum kaun)\b/.test(p))
-    return "🧠 Main **Nexus AI Ultra v3.5** hoon — ek state-of-the-art neural intelligence platform.\n\n**Mere features:**\n- 💬 Multi-lingual chat (Hindi + English)\n- 🎨 Image generation\n- 🔬 Deep research\n- 💻 Code generation\n- 🗣️ Voice interaction\n\nMujhse kuch bhi poochein! 🚀";
-  if (/\b(thank|dhanyavad|shukriya|thanks)\b/.test(p))
-    return "😊 Aapka swagat hai! Kuch aur help chahiye toh zaroor poochein. Main hamesha ready hoon! 🌟";
-  return `💡 **Nexus AI Ultra**\n\nAapka sawaal mila: "${prompt}"\n\n[ADMIN ALERT]: Please add GEMINI_API_KEY or GROQ_API_KEY in Vercel to enable full Deep AI context. Without keys, I can only provide basic offline responses.`;
+  // If no providers succeeded, return an error
+  return res.status(500).json({ reply: "⚠️ **System Error:** Failed to generate response from Cloud Providers. Please verify your GEMINI_API_KEY in Vercel settings.", provider: 'error' });
 }

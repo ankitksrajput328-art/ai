@@ -169,7 +169,7 @@ async function processAIResponse(prompt, image) {
         } else {
             let answer = '';
 
-            // Provider 1: Our own Vercel serverless API (most reliable)
+            // Real Production API Call
             try {
                 let contextHistory = [];
                 const session = chatSessions.find(s => s.id === currentSessionId);
@@ -196,26 +196,12 @@ async function processAIResponse(prompt, image) {
                     const d1 = await r1.json();
                     answer = d1?.reply || '';
                     console.log('AI Provider:', d1?.provider);
+                } else {
+                    answer = "⚠️ **Server Error:** Could not connect to Nexus AI Core. Please check Vercel Logs or API configurations.";
                 }
-            } catch(e1) { console.warn('Server API failed:', e1.message); }
-
-            // Provider 2: Direct Pollinations GET (browser-side fallback)
-            if (!answer || answer.trim().length < 5) {
-                try {
-                    const ctrl2 = new AbortController();
-                    const t2 = setTimeout(() => ctrl2.abort(), 10000);
-                    const r2 = await fetch(`https://text.pollinations.ai/${encodeURIComponent(cleanPrompt)}?model=openai&seed=${Date.now()}`, { signal: ctrl2.signal });
-                    clearTimeout(t2);
-                    if (r2.ok) {
-                        const text = await r2.text();
-                        if (text && text.trim().length > 10) answer = text;
-                    }
-                } catch(e2) { console.warn('Pollinations direct failed:', e2.message); }
-            }
-
-            // Provider 3: Local intelligent fallback (always works)
-            if (!answer || answer.trim().length < 5) {
-                answer = generateSmartFallback(cleanPrompt);
+            } catch(e1) { 
+                console.warn('Server API failed:', e1.message); 
+                answer = "⚠️ **Network Error:** Failed to reach Nexus AI Core. Please check your internet connection.";
             }
 
             // Stream word by word
@@ -251,7 +237,7 @@ async function processAIResponse(prompt, image) {
         }
     } catch (e) {
         console.error('AI Error:', e);
-        fullResponse = generateSmartFallback(cleanPrompt);
+        fullResponse = "⚠️ **System Failure:** An unexpected error occurred in the Neural Engine.";
         textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
     }
 
@@ -263,29 +249,7 @@ async function processAIResponse(prompt, image) {
     }
 }
 
-// Intelligent local fallback — covers common topics
-function generateSmartFallback(prompt) {
-    const p = prompt.toLowerCase();
-    if (/\b(hi|hello|hey|namaste|namaskar|helo)\b/.test(p))
-        return "👋 **Namaste! Main Nexus AI Ultra hoon.**\n\nAap kuch bhi pooch sakte hain — coding, science, math, history, ya kuch bhi! Batayein, kaise madad karoon? 🚀";
-    if (/\b(ai|artificial intelligence)\b/.test(p))
-        return "🤖 **Artificial Intelligence (AI)** ek powerful technology hai.\n\n**Types:**\n- **Machine Learning** — Data se seekhna\n- **Deep Learning** — Neural networks use karna\n- **NLP** — Bhasha samajhna\n- **Computer Vision** — Images analyze karna\n- **Generative AI** — Naya content banana (jaise ChatGPT)\n\nAI aaj healthcare, finance, education, aur entertainment mein use ho raha hai. ✨";
-    if (/\b(code|coding|program|python|javascript|html|css|java|react)\b/.test(p))
-        return "💻 **Coding Expert Mode Active!**\n\nMain coding mein help kar sakta hoon:\n- **Python** — Data science, AI, automation\n- **JavaScript** — Web apps, Node.js\n- **HTML/CSS** — Beautiful websites\n- **React** — Modern UI development\n\nApna specific question batayein! Jaise: *'Write a Python function to sort a list'*";
-    if (/\b(math|calculate|ganit|formula)\b/.test(p))
-        return "🔢 **Math Expert Ready!**\n\nMain solve kar sakta hoon:\n- Algebra, Geometry, Trigonometry\n- Calculus, Statistics\n- Word problems\n\nApna question likho, jaise: *'Solve x² + 5x + 6 = 0'*";
-    if (/\b(weather|mausam|temperature)\b/.test(p))
-        return "🌤️ Real-time weather ke liye **Google Weather** ya **weather.com** check karein.\n\nKoi aur question ho toh zaroor poochein!";
-    if (/\b(who are you|kaun ho|kon ho|tum kaun|kya ho)\b/.test(p))
-        return "🧠 **Main Nexus AI Ultra v3.5 hoon!**\n\n**Features:**\n- 💬 Hindi + English chat\n- 🎨 Image generation\n- 💻 Code generation\n- 🔬 Research & analysis\n- 🗣️ Voice interaction\n\nMujhse kuch bhi poochein! 🚀";
-    if (/\b(thank|dhanyavad|shukriya|thanks)\b/.test(p))
-        return "😊 Aapka swagat hai! Kuch aur help chahiye toh zaroor poochein. Main hamesha ready hoon! 🌟";
-    if (/\b(data science|machine learning|deep learning|neural)\b/.test(p))
-        return "📊 **Data Science & ML**\n\n**Key Concepts:**\n- **Data Science** — Data se insights nikalna\n- **Machine Learning** — Algorithm jo data se seekhe\n- **Deep Learning** — Complex neural networks\n- **Tools:** Python, TensorFlow, PyTorch, Pandas\n\n**Career Path:** Learn Python → Statistics → ML → Deep Learning → Specialize!";
-    if (/\b(history|itihas|bharat|india)\b/.test(p))
-        return "📜 **India ka rich history hai!**\n\n- **Indus Valley** (3300 BCE) — World's oldest civilization\n- **Vedic Period** — Sanskrit, Vedas, Upanishads\n- **Mughal Empire** — Architecture, culture\n- **British Rule** — 1857 revolt to 1947 independence\n- **Modern India** — World's largest democracy\n\nKisi specific topic pe detail chahiye?";
-    return `💡 **Nexus AI Ultra**\n\nAapka sawaal mila: *"${prompt}"*\n\nAbhi AI server connect ho raha hai. Thodi der mein dobara try karein.\n\n**Try these:**\n- "What is AI?"\n- "Write Python code for..."\n- "Generate image of..."\n- "What is data science?"`;
-}
+
 
 // --- Voice & Speech ---
 function toggleVoiceRecording() {
@@ -686,11 +650,7 @@ function handleLogin() {
                 }
             });
     } else {
-        // Mock Login for UI demonstration
-        showNotification('Demo Mode', 'Logged in as ' + email + ' (Firebase Config Missing)', 'info');
-        document.getElementById('auth-modal').style.display = 'none';
-        const profileName = document.querySelector('.user-profile span:first-child');
-        if (profileName) profileName.innerText = email.split('@')[0];
+        showNotification('System Error', 'Firebase Authentication is not initialized.', 'error');
     }
 }
 
@@ -700,7 +660,7 @@ function handleGoogleLogin() {
         auth.signInWithPopup(provider)
             .catch(error => showNotification('Error', error.message, 'error'));
     } else {
-        showNotification('Demo Mode', 'Google Sign-in clicked (Firebase Config Missing)', 'info');
+        showNotification('System Error', 'Firebase Authentication is not initialized.', 'error');
     }
 }
 
