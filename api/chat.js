@@ -19,9 +19,9 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
     { role: 'user', content: prompt }
   ];
 
-  // Attempt 2: Gemini (Smart Retry Chain)
+  // Attempt 1: Gemini (2026 Ultra Series)
   if (process.env.GEMINI_API_KEY) {
-    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp'];
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.1-flash-lite-preview', 'gemini-2.5-pro'];
     for (const model of models) {
       try {
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -34,7 +34,7 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
         if (r.ok) {
           const d = await r.json();
           const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) return res.status(200).json({ reply: text, provider: `gemini-${model}` });
+          if (text) return res.status(200).json({ reply: text, provider: `nexus-node-${model}` });
         }
       } catch (e) {}
     }
