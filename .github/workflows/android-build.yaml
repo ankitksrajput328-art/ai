@@ -1,0 +1,60 @@
+name: Android Play Store Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build & Sign Android AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Sync Capacitor to Android
+        run: |
+          cp index.html www/
+          cp style.css www/
+          cp script.js www/
+          cp sw.js www/
+          cp manifest.json www/
+          npx cap sync android
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/nexus-release.keystore
+
+      - name: Build Release AAB
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease \
+            -PKEYSTORE_PATH=app/nexus-release.keystore \
+            -PKEYSTORE_PASS="${{ secrets.KEYSTORE_PASS }}" \
+            -PKEY_ALIAS="${{ secrets.KEY_ALIAS }}" \
+            -PKEY_PASS="${{ secrets.KEY_PASS }}"
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-ai-ultra-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
