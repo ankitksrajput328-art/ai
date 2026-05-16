@@ -632,10 +632,13 @@ function generateFollowUpQuestions(prompt) {
 
 // --- Firebase Authentication Mock / Setup ---
 const firebaseConfig = {
-    // apiKey: "YOUR_API_KEY",
-    // authDomain: "YOUR_PROJECT.firebaseapp.com",
-    // databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-    // projectId: "YOUR_PROJECT",
+    apiKey: "AIzaSyCi5P9tWq0mgVyuw5g534xUf0h07YEF2Tk",
+    authDomain: "nexus-ai-ultra-27ad8.firebaseapp.com",
+    projectId: "nexus-ai-ultra-27ad8",
+    storageBucket: "nexus-ai-ultra-27ad8.firebasestorage.app",
+    messagingSenderId: "871100083685",
+    appId: "1:871100083685:web:658583e44d887e609f530c",
+    measurementId: "G-LLVCBX0KW4"
 };
 
 // Initialize Firebase only if config is provided
