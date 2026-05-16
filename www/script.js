@@ -165,12 +165,24 @@ async function processAIResponse(prompt, image) {
 
             // Provider 1: Our own Vercel serverless API (most reliable)
             try {
+                let contextHistory = [];
+                const session = chatSessions.find(s => s.id === currentSessionId);
+                if (session && session.messages) {
+                    contextHistory = session.messages.slice(-6).map(m => ({
+                        role: m.isUser ? 'user' : 'assistant',
+                        content: m.text
+                    }));
+                }
+                
+                const isWebSearch = cleanPrompt.startsWith('/search ');
+                const finalPrompt = isWebSearch ? cleanPrompt.replace('/search ', '') : cleanPrompt;
+
                 const ctrl1 = new AbortController();
                 const t1 = setTimeout(() => ctrl1.abort(), 15000);
                 const r1 = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: cleanPrompt }),
+                    body: JSON.stringify({ prompt: finalPrompt, history: contextHistory, webSearch: isWebSearch }),
                     signal: ctrl1.signal
                 });
                 clearTimeout(t1);
@@ -213,11 +225,22 @@ async function processAIResponse(prompt, image) {
             }
             speakResponse(answer.substring(0, 200));
 
-            // Copy button
+            // Copy button & Follow-ups
             const actions = document.createElement('div');
-            actions.style.cssText = 'margin-top:8px;';
+            actions.style.cssText = 'margin-top:12px; display:flex; flex-wrap:wrap; gap:8px;';
             const safeText = answer.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             actions.innerHTML = `<button onclick="navigator.clipboard.writeText(this.dataset.text);this.innerHTML='✅ Copied!';setTimeout(()=>this.innerHTML='📋 Copy',2000);" data-text="${safeText}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;padding:4px 12px;border-radius:8px;">📋 Copy</button>`;
+            
+            // Add Smart Suggestions
+            const suggestions = generateFollowUpQuestions(cleanPrompt);
+            suggestions.forEach(sug => {
+                const btn = document.createElement('button');
+                btn.className = 'suggestion-chip';
+                btn.style.cssText = 'background:rgba(var(--accent-rgb, 14, 165, 233), 0.1); border:1px solid rgba(var(--accent-rgb, 14, 165, 233), 0.3); color:var(--accent); cursor:pointer; font-size:11px; padding:4px 12px; border-radius:12px; transition:all 0.3s ease;';
+                btn.innerText = sug;
+                btn.onclick = () => { setInput(sug); sendMessage(); };
+                actions.appendChild(btn);
+            });
             content.appendChild(actions);
         }
     } catch (e) {
@@ -479,16 +502,29 @@ function logStatus(msg) {
     if (el) el.innerText = msg;
 }
 
-function handleImageUpload(e) {
+function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        currentImageBase64 = event.target.result.split(',')[1];
-        get('image-preview').src = event.target.result;
-        get('image-preview-area').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            currentImageBase64 = event.target.result.split(',')[1];
+            get('image-preview').src = event.target.result;
+            get('image-preview-area').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // Document/Text file upload logic
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const textContent = event.target.result;
+            userInput.value = `[Contents of ${file.name}]:\n${textContent}\n\n` + userInput.value;
+            autoResize(userInput);
+            showNotification('File Uploaded', `${file.name} loaded into neural context.`, 'success');
+        };
+        reader.readAsText(file);
+    }
 }
 
 function removeImage() {
@@ -571,3 +607,19 @@ function shareApp() {
         });
     }
 }
+
+function generateFollowUpQuestions(prompt) {
+    const p = prompt.toLowerCase();
+    if (p.includes('code') || p.includes('python') || p.includes('js') || p.includes('html')) 
+        return ['Explain this code step-by-step', 'How to optimize this?', 'Write test cases'];
+    if (p.includes('ai') || p.includes('machine learning') || p.includes('neural')) 
+        return ['How do neural networks learn?', 'What is Deep Learning?', 'Explain GPT architecture'];
+    if (p.includes('weather') || p.includes('mausam')) 
+        return ['What about tomorrow?', 'Will it rain this week?', 'Show 7 day forecast'];
+    if (p.includes('history') || p.includes('india')) 
+        return ['Tell me about the Mughal Empire', 'Who was Ashoka?', 'Explain the Indus Valley'];
+    if (p.includes('search'))
+        return ['Search for recent AI news', 'Search for tech trends 2026'];
+    return ['Tell me more', 'Explain step-by-step', 'Give me an example'];
+}
+
