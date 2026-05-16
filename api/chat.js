@@ -34,21 +34,29 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
     } catch (e) {}
   }
 
-  // Attempt 2: Gemini (Standard)
+  // Attempt 2: Gemini (Smart Retry Chain)
   if (process.env.GEMINI_API_KEY) {
-    try {
-      // Use v1beta with 1.5-flash-latest
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + prompt }] }] })
-      });
-      if (r.ok) {
-        const d = await r.json();
-        const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return res.status(200).json({ reply: text, provider: 'gemini' });
-      }
-    } catch (e) {}
+    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-latest', 'gemini-2.0-flash-exp'];
+    for (const model of models) {
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            contents: [{ role: 'user', parts: [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + prompt }] }],
+            generationConfig: { temperature: 0.8, topP: 0.95, topK: 40, maxOutputTokens: 2048 }
+          })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return res.status(200).json({ reply: text, provider: `gemini-${model}` });
+        } else {
+          const err = await r.json();
+          console.warn(`Gemini ${model} failed:`, err?.error?.message);
+        }
+      } catch (e) { console.error(`Gemini ${model} fetch failed:`, e.message); }
+    }
   }
 
   // Final Attempt: Public Ultra-High Speed Fallback (Ensures zero downtime)
