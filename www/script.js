@@ -126,7 +126,7 @@ function addMessageToUI(text, isUser, save = true, image = null) {
         if (session) {
             session.messages.push({ text, isUser, image });
             saveSessions();
-            updateHistorySidebar();
+            renderHistory();
         }
     }
 }
@@ -189,6 +189,7 @@ async function processAIResponse(prompt, image) {
     if (session) {
         session.messages.push({ text: fullResponse, isUser: false });
         saveSessions();
+        renderHistory();
     }
 }
 
@@ -312,16 +313,32 @@ function saveSessions() {
     localStorage.setItem('nexus_current_id', currentSessionId);
 }
 
-function updateHistorySidebar() {
+function renderHistory() {
     const list = get('chat-history-list');
-    if (!list) return;
+    const gallery = get('image-gallery');
     list.innerHTML = '';
-    chatSessions.forEach(s => {
-        const btn = document.createElement('button');
-        btn.className = `nav-item ${s.id === currentSessionId ? 'active' : ''}`;
-        btn.innerHTML = `<i class="fa-regular fa-message"></i> <span>${s.title}</span>`;
-        btn.onclick = () => loadSession(s.id);
-        list.appendChild(btn);
+    if(gallery) gallery.innerHTML = '<div class="glass-panel" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:15px; cursor:pointer;" onclick="setInput(\'Generate a futuristic cyberpunk city\'); showView(\'chat\'); sendMessage();"><i class="fa-solid fa-plus" style="font-size:32px; color:var(--accent);"></i><span style="font-size:14px; color:var(--text-dim);">Generate New Art</span></div>';
+
+    chatSessions.forEach(session => {
+        const item = document.createElement('div');
+        item.className = `history-item ${session.id === currentSessionId ? 'active' : ''}`;
+        item.innerHTML = `<i class="fa-solid fa-message"></i> <span>${session.title}</span>`;
+        item.onclick = () => loadSession(session.id);
+        list.appendChild(item);
+
+        // Populate Image Studio Gallery
+        if(gallery) {
+            session.messages.forEach(msg => {
+                const imgMatch = msg.text.match(/!\[Generated Image\]\((.*?)\)/);
+                if(imgMatch && imgMatch[1]) {
+                    const imgCard = document.createElement('div');
+                    imgCard.className = 'glass-panel';
+                    imgCard.style.cssText = 'aspect-ratio:1; overflow:hidden; border-radius:15px; cursor:pointer;';
+                    imgCard.innerHTML = `<img src="${imgMatch[1]}" style="width:100%; height:100%; object-fit:cover;" onclick="window.open('${imgMatch[1]}')">`;
+                    gallery.appendChild(imgCard);
+                }
+            });
+        }
     });
 }
 
