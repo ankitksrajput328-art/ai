@@ -59,18 +59,14 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
     }
   }
 
-  // Final Attempt: Public Ultra-High Speed Fallback (Ensures zero downtime)
+  // Final Attempt: Robust Public Fallback (Ensures zero downtime)
   try {
-    const r = await fetch('https://text.pollinations.ai/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, model: 'openai', system: systemMsg })
-    });
-    if (r.ok) {
-      const text = await r.text();
-      return res.status(200).json({ reply: text, provider: 'nexus-fallback' });
+    const fallbackResponse = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai&system=${encodeURIComponent(systemMsg)}`);
+    if (fallbackResponse.ok) {
+      const text = await fallbackResponse.text();
+      if (text) return res.status(200).json({ reply: text, provider: 'nexus-ultra-core' });
     }
-  } catch (e) {}
+  } catch (e) { console.error('Fallback failed:', e.message); }
 
-  return res.status(500).json({ reply: "⚠️ **Neural Node Congestion:** Connection failed. Please check your API keys in Vercel." });
+  return res.status(500).json({ reply: "⚠️ **System Critical Error:** All Neural Nodes (Gemini/Groq) are failing. Please verify your GEMINI_API_KEY in Vercel settings and ensure 'Generative Language API' is enabled in Google Cloud Console." });
 }
