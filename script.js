@@ -623,3 +623,74 @@ function generateFollowUpQuestions(prompt) {
     return ['Tell me more', 'Explain step-by-step', 'Give me an example'];
 }
 
+
+// --- Firebase Authentication Mock / Setup ---
+const firebaseConfig = {
+    // apiKey: "YOUR_API_KEY",
+    // authDomain: "YOUR_PROJECT.firebaseapp.com",
+    // databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    // projectId: "YOUR_PROJECT",
+};
+
+// Initialize Firebase only if config is provided
+let app, auth, db;
+try {
+    if (firebaseConfig.apiKey) {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        console.log('Firebase initialized');
+        
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                console.log('User signed in:', user.email);
+                showNotification('Signed In', 'Welcome back to Nexus AI', 'success');
+                document.getElementById('auth-modal').style.display = 'none';
+                // Update UI
+                const profileName = document.querySelector('.user-profile span:first-child');
+                if (profileName) profileName.innerText = user.displayName || user.email.split('@')[0];
+            } else {
+                console.log('User signed out');
+            }
+        });
+    }
+} catch (e) {
+    console.log('Firebase init skipped: ', e.message);
+}
+
+function handleLogin() {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-password').value;
+    if (!email || !pass) return showNotification('Error', 'Please enter email and password', 'error');
+    
+    if (auth) {
+        auth.signInWithEmailAndPassword(email, pass)
+            .catch(error => {
+                if (error.code === 'auth/user-not-found') {
+                    // Auto signup if not found
+                    auth.createUserWithEmailAndPassword(email, pass)
+                        .then(() => showNotification('Account Created', 'Welcome to Nexus AI', 'success'))
+                        .catch(err => showNotification('Error', err.message, 'error'));
+                } else {
+                    showNotification('Error', error.message, 'error');
+                }
+            });
+    } else {
+        // Mock Login for UI demonstration
+        showNotification('Demo Mode', 'Logged in as ' + email + ' (Firebase Config Missing)', 'info');
+        document.getElementById('auth-modal').style.display = 'none';
+        const profileName = document.querySelector('.user-profile span:first-child');
+        if (profileName) profileName.innerText = email.split('@')[0];
+    }
+}
+
+function handleGoogleLogin() {
+    if (auth) {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .catch(error => showNotification('Error', error.message, 'error'));
+    } else {
+        showNotification('Demo Mode', 'Google Sign-in clicked (Firebase Config Missing)', 'info');
+    }
+}
+
