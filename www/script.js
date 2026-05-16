@@ -634,6 +634,7 @@ function generateFollowUpQuestions(prompt) {
 const firebaseConfig = {
     apiKey: "AIzaSyCi5P9tWq0mgVyuw5g534xUf0h07YEF2Tk",
     authDomain: "nexus-ai-ultra-27ad8.firebaseapp.com",
+    databaseURL: "https://nexus-ai-ultra-27ad8-default-rtdb.firebaseio.com",
     projectId: "nexus-ai-ultra-27ad8",
     storageBucket: "nexus-ai-ultra-27ad8.firebasestorage.app",
     messagingSenderId: "871100083685",
