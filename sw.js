@@ -1,7 +1,7 @@
 // Nexus AI Ultra - Production Service Worker v3.0
 // Handles offline caching, PWA install, and asset management
 
-const CACHE_NAME = 'nexus-ai-v3.5';
+const CACHE_NAME = 'nexus-ai-v3.5.1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
