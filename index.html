@@ -98,7 +98,10 @@
         <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Sidebar Navigation">
             <div class="brand">
                 <div class="brand-icon" aria-hidden="true"><i class="fa-solid fa-infinity"></i></div>
-                <span class="brand-text">Nexus <span class="badge-ultra">ULTRA</span></span>
+                <div style="display:flex; flex-direction:column;">
+                    <span class="brand-text">Nexus <span class="badge-ultra">ULTRA</span></span>
+                    <span style="font-size: 8px; color: var(--accent); font-weight: 800; letter-spacing: 1.5px; margin-left: 10px;">V3.5 ULTIMATE</span>
+                </div>
             </div>
             
             <nav class="sidebar-nav">
@@ -383,10 +386,15 @@
                         <div class="glass-panel" style="padding:0; overflow:hidden; border-radius:20px;">
                             <div class="setting-row-pro">
                                 <i class="fa-solid fa-briefcase"></i> 
-                                <div style="flex:1;">
-                                    <div>Workspace</div>
-                                    <div style="font-size:11px; color:var(--text-dim);">Personal</div>
-                                </div>
+                                <div class="sidebar-header">
+                <div class="brand-logo">
+                    <img src="logo.png" alt="Nexus Logo">
+                    <div>
+                        <h1 style="font-size: 20px;">Nexus AI Ultra</h1>
+                        <span style="font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 1px;">V3.5 ULTIMATE</span>
+                    </div>
+                </div>
+            </div>
                                 <i class="fa-solid fa-chevron-right"></i>
                             </div>
                             <div class="setting-row-pro" style="color:var(--accent);">
@@ -411,9 +419,9 @@
                         <div class="glass-panel" style="padding:0; overflow:hidden; border-radius:20px;">
                             <div class="setting-row-pro" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i> <span>Dark Mode / Light Mode</span> <i class="fa-solid fa-chevron-right"></i></div>
                             <div class="setting-row-pro" onclick="showNotification('Language', 'Language set to Neural Adaptive.', 'info')"><i class="fa-solid fa-language"></i> <span>Language</span> <i class="fa-solid fa-chevron-right"></i></div>
-                            <div class="setting-row-pro" onclick="showNotification('Update', 'Neural OS is up to date (v3.0.0 Pro).', 'success')"><i class="fa-solid fa-cloud-arrow-up"></i> <span>Check for Updates</span> <i class="fa-solid fa-chevron-right"></i></div>
+                            <div class="setting-row-pro" onclick="showNotification('Update', 'Neural OS is up to date (v3.5 Ultimate).', 'success')"><i class="fa-solid fa-cloud-arrow-up"></i> <span>Check for Updates</span> <i class="fa-solid fa-chevron-right"></i></div>
                             <div class="setting-row-pro" onclick="showNotification('Security', 'Encryption node healthy.', 'success')"><i class="fa-solid fa-lock"></i> <span>Security</span> <i class="fa-solid fa-chevron-right"></i></div>
-                            <div class="setting-row-pro" onclick="showNotification('About', 'Nexus AI Ultra v3.0 Pro Edition. Developed by Ankit Antigravity.', 'info')"><i class="fa-solid fa-circle-info"></i> <span>About</span> <i class="fa-solid fa-chevron-right"></i></div>
+                            <div class="setting-row-pro" onclick="showNotification('About', 'Nexus AI Ultra v3.5 Ultimate Edition. Developed by Ankit Antigravity.', 'info')"><i class="fa-solid fa-circle-info"></i> <span>About</span> <i class="fa-solid fa-chevron-right"></i></div>
                         </div>
                     </div>
 
