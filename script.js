@@ -405,6 +405,7 @@ function showView(viewName) {
 function saveSessions() {
     localStorage.setItem('nexus_sessions', JSON.stringify(chatSessions));
     localStorage.setItem('nexus_current_id', currentSessionId);
+    if (typeof syncToCloud === 'function') syncToCloud();
 }
 
 function renderHistory() {
@@ -634,7 +635,6 @@ function generateFollowUpQuestions(prompt) {
 const firebaseConfig = {
     apiKey: "AIzaSyCi5P9tWq0mgVyuw5g534xUf0h07YEF2Tk",
     authDomain: "nexus-ai-ultra-27ad8.firebaseapp.com",
-    databaseURL: "https://nexus-ai-ultra-27ad8-default-rtdb.firebaseio.com",
     projectId: "nexus-ai-ultra-27ad8",
     storageBucket: "nexus-ai-ultra-27ad8.firebasestorage.app",
     messagingSenderId: "871100083685",
@@ -713,12 +713,7 @@ function syncToCloud() {
     }
 }
 
-// Override local save to also sync to cloud
-const originalSave = saveSessions;
-saveSessions = function() {
-    originalSave(); // save locally first
-    syncToCloud();  // then push to Firebase
-};
+
 
 // Fetch from cloud on login
 if (auth) {
