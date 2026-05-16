@@ -50,49 +50,29 @@ Remember previous conversation context. If the user writes in Hindi/Hinglish, re
     } catch (e) { console.error('Groq failed:', e.message); }
   }
 
-  // Provider 2: Google Gemini
+  // Provider 2: Google Gemini (OpenAI Compatible)
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey) {
     try {
-      // Fix history mapping for Gemini strictly alternating user/model
-      let geminiHistory = [];
-      for (let i = 0; i < history.length; i++) {
-        let m = history[i];
-        let role = m.role === 'assistant' ? 'model' : 'user';
-        if (geminiHistory.length > 0 && geminiHistory[geminiHistory.length-1].role === role) {
-           geminiHistory[geminiHistory.length-1].parts[0].text += "\\n" + m.content;
-        } else {
-           geminiHistory.push({ role: role, parts: [{ text: m.content }] });
-        }
-      }
-      
-      // Ensure the last message in history isn't also a 'user' if we're adding userPrompt
-      if (geminiHistory.length > 0 && geminiHistory[geminiHistory.length-1].role === 'user') {
-          geminiHistory.push({ role: 'model', parts: [{ text: 'Understood.' }] });
-      }
-
-      geminiHistory.push({ role: 'user', parts: [{ text: userPrompt }] });
-
-      const requestBody = {
-        contents: [
-          { role: 'user', parts: [{ text: "System Instructions: " + systemMsg }] },
-          ...geminiHistory
-        ]
-      };
-
-      const gr = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({
+          model: "gemini-1.5-flash",
+          messages: [
+            { role: "system", content: systemMsg },
+            ...history.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+            { role: "user", content: userPrompt }
+          ]
+        })
       });
-      
       if (gr.ok) {
         const gd = await gr.json();
-        const text = gd?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const text = gd?.choices?.[0]?.message?.content;
         if (text) return res.status(200).json({ reply: text, provider: 'gemini' });
       } else {
         const errorText = await gr.text();
-        console.error('Gemini API Error Response:', errorText);
+        console.error('Gemini OpenAI Error:', errorText);
         return res.status(500).json({ reply: '⚠️ **Gemini API Error:** ' + errorText });
       }
     } catch (e) { console.error('Gemini failed:', e.message); }
