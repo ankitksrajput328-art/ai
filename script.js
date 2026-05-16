@@ -1,6 +1,9 @@
 // Nexus AI Ultra - Core Logic Engine V3.0 (PRO Edition)
 // Developed by Ankit Antigravity
 
+// Global Error Handler
+window.onerror = function(m,u,l,c,e){ console.error('Nexus Error:',m,u,l); return false; };
+
 // --- Global Variables ---
 let currentImageBase64 = null;
 let currentImageMimeType = null;
