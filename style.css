@@ -432,6 +432,10 @@ body {
     .app-view { padding: 15px; padding-top: calc(var(--header-height) + 15px); padding-bottom: 100px; }
 }
 
+@media all and (display-mode: standalone) {
+    #pwa-install-banner { display: none !important; }
+}
+
 /* Typography Enhancements */
 h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 800; }
 .gradient-text { background: linear-gradient(135deg, #fff, var(--text-dim)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }

@@ -197,7 +197,12 @@ async function processAIResponse(prompt, image) {
                     answer = d1?.reply || '';
                     console.log('AI Provider:', d1?.provider);
                 } else {
-                    answer = "⚠️ **Server Error:** Could not connect to Nexus AI Core. Please check Vercel Logs or API configurations.";
+                    try {
+                        const errData = await r1.json();
+                        answer = errData.reply || "⚠️ **Server Error:** Could not connect to Nexus AI Core.";
+                    } catch (e) {
+                        answer = "⚠️ **Server Error:** Could not connect to Nexus AI Core.";
+                    }
                 }
             } catch(e1) { 
                 console.warn('Server API failed:', e1.message); 

@@ -91,8 +91,7 @@ Remember previous conversation context. If the user writes in Hindi/Hinglish, re
       } else {
         const errorText = await gr.text();
         console.error('Gemini API Error Response:', errorText);
-        // If it's a structural error, just return the error text to debug
-        // return res.status(500).json({ reply: 'API Error: ' + errorText });
+        return res.status(500).json({ reply: '⚠️ **Gemini API Error:** ' + errorText });
       }
     } catch (e) { console.error('Gemini failed:', e.message); }
   }
