@@ -199,14 +199,24 @@ async function getMockResponse(prompt) {
     if (lower.includes('vision')) return "I have activated my **Neural Vision** clusters. You can use the 'Vision' tab to scan objects in real-time. I can identify patterns, extract text, and analyze spatial geometry with 99.8% accuracy.";
     if (lower.includes('video')) return "My **Studio Engine** is ready. Switch to the 'Studio' view to render high-definition cinematic content. Our new V2.5 rendering pipeline supports temporal consistency and 4K upscaling.";
     
-    return `### 🌐 Nexus Intelligence Synthesis
-I have processed your query: "${prompt}".
-
-**Key Strategic Insights:**
-1. **Efficiency Node:** My neural clusters suggest a 45% optimization path for your current workflow.
-2. **Predictive Analytics:** Data trends indicate high relevance for the upcoming quarterly cycle.
-
-Nexus AI Ultra is currently operating at peak capacity. How else can I assist your command?`;
+    // Pro Version: Real answers from Wikipedia API
+    try {
+        const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(prompt)}&utf8=&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+        
+        if (searchData.query && searchData.query.search.length > 0) {
+            const topResult = searchData.query.search[0];
+            const title = topResult.title;
+            const snippet = topResult.snippet.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML tags
+            
+            return `### 🌐 Nexus Real-Time Research: **${title}**\n\n${snippet}...\n\n*Would you like me to dive deeper into this topic?*`;
+        } else {
+            return `I couldn't find a definitive answer for "${prompt}" in my current primary knowledge banks. However, my neural clusters suggest we could approach this by breaking it down. Can you provide more context?`;
+        }
+    } catch (e) {
+        return `### 🌐 Nexus Intelligence Synthesis\nI have processed your query: "${prompt}".\n\n**System Alert:** Live web access is currently degraded. Utilizing offline heuristics to synthesize an answer.`;
+    }
 }
 
 // --- UI Helpers ---
@@ -429,11 +439,17 @@ function handleHashChange() {
 function showView(viewId) {
     // Hide all views
     const views = document.querySelectorAll('.app-view');
-    views.forEach(v => v.classList.remove('active'));
+    views.forEach(v => {
+        v.classList.remove('active');
+        v.classList.add('hidden');
+    });
     
     // Show selected view
     const activeView = get(viewId);
-    if (activeView) activeView.classList.add('active');
+    if (activeView) {
+        activeView.classList.add('active');
+        activeView.classList.remove('hidden');
+    }
     
     // Update active nav item
     const hash = '#' + viewId.replace('view-', '');
