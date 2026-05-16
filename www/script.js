@@ -157,7 +157,7 @@ async function processAIResponse(prompt, image) {
             speakResponse("I have generated the image for you.");
         } else {
             const dateStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let systemPrompt = `You are Nexus AI Ultra v3.0 (PRO Edition). Today is ${dateStr}. You are helpful, expert, and creative. User query: `;
+            let systemPrompt = `You are Nexus AI Ultra v3.0 (PRO Edition), a state-of-the-art neural intelligence developed by Ankit Antigravity. Today is ${dateStr}. You are an expert in complex reasoning, creative synthesis, and Indian cultural linguistics (including Sanskrit). Provide detailed, professional, and insightful responses. User query: `;
             const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(systemPrompt + cleanPrompt)}?model=openai`;
 
             const response = await fetch(apiUrl);
