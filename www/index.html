@@ -53,15 +53,7 @@
     }
     </script>
 
-    <!-- PWA Manifest & Icons -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#8b5cf6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NexusAI">
-    <link rel="apple-touch-icon" href="logo.png">
-
-    <!-- Icons & Fonts -->
+    <!-- Standard Web Config -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -482,46 +474,5 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
-
-    <!-- PWA: Service Worker Registration + Install Prompt -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('[Nexus PWA] Service Worker registered:', reg.scope))
-                    .catch(err => console.warn('[Nexus PWA] SW registration failed:', err));
-            });
-        }
-
-        let deferredPrompt;
-        const banner = document.getElementById('pwa-install-banner');
-        const installBtn = document.getElementById('pwa-install-btn');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if (banner) {
-                banner.style.display = 'flex';
-                // Auto-hide after 10 seconds if user ignores
-                setTimeout(() => { if (banner) banner.style.display = 'none'; }, 10000);
-            }
-        });
-
-        if (installBtn) {
-            installBtn.addEventListener('click', async () => {
-                if (!deferredPrompt) return;
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log('[Nexus PWA] Install outcome:', outcome);
-                deferredPrompt = null;
-                if (banner) banner.style.display = 'none';
-            });
-        }
-
-        window.addEventListener('appinstalled', () => {
-            console.log('[Nexus PWA] App successfully installed!');
-            if (banner) banner.style.display = 'none';
-        });
-    </script>
 </body>
 </html>
