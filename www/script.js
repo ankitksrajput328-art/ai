@@ -26,7 +26,7 @@ const voiceTranscript = get('voice-transcript');
 window.onload = () => {
     console.log("Nexus Core V3.0: Online & Secure");
     initRouter();
-    updateHistorySidebar();
+    renderHistory();
     
     // Theme Restoration
     if (localStorage.getItem('nexus_theme') === 'light') {

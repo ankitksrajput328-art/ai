@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "name": "nexus-ai-ultra",
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
