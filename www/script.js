@@ -161,40 +161,41 @@ async function processAIResponse(prompt, image) {
             textSpan.innerHTML = marked.parse(fullResponse);
             speakResponse("Your image is ready.");
         } else {
-            const sysMsg = `You are Nexus AI Ultra, a brilliant and helpful AI assistant. Answer clearly, helpfully and in the same language the user writes in (Hindi or English). Be friendly and detailed.`;
-            
             let answer = '';
 
-            // Provider 1: Pollinations GET (anonymous, free)
+            // Provider 1: Our own Vercel serverless API (most reliable)
             try {
-                const polliUrl = `https://text.pollinations.ai/${encodeURIComponent(cleanPrompt)}?system=${encodeURIComponent(sysMsg)}&model=openai&seed=${Date.now()}`;
-                const ctrl = new AbortController();
-                const tid = setTimeout(() => ctrl.abort(), 10000);
-                const r1 = await fetch(polliUrl, { signal: ctrl.signal });
-                clearTimeout(tid);
-                if (r1.ok) { answer = await r1.text(); }
-            } catch(e1) { console.warn('Provider 1 failed:', e1.message); }
+                const ctrl1 = new AbortController();
+                const t1 = setTimeout(() => ctrl1.abort(), 15000);
+                const r1 = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: cleanPrompt }),
+                    signal: ctrl1.signal
+                });
+                clearTimeout(t1);
+                if (r1.ok) {
+                    const d1 = await r1.json();
+                    answer = d1?.reply || '';
+                    console.log('AI Provider:', d1?.provider);
+                }
+            } catch(e1) { console.warn('Server API failed:', e1.message); }
 
-            // Provider 2: Pollinations chat completions
-            if (!answer) {
+            // Provider 2: Direct Pollinations GET (browser-side fallback)
+            if (!answer || answer.trim().length < 5) {
                 try {
                     const ctrl2 = new AbortController();
-                    const tid2 = setTimeout(() => ctrl2.abort(), 10000);
-                    const r2 = await fetch('https://text.pollinations.ai/openai/chat/completions', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ model: 'openai', messages: [{ role: 'system', content: sysMsg }, { role: 'user', content: cleanPrompt }] }),
-                        signal: ctrl2.signal
-                    });
-                    clearTimeout(tid2);
+                    const t2 = setTimeout(() => ctrl2.abort(), 10000);
+                    const r2 = await fetch(`https://text.pollinations.ai/${encodeURIComponent(cleanPrompt)}?model=openai&seed=${Date.now()}`, { signal: ctrl2.signal });
+                    clearTimeout(t2);
                     if (r2.ok) {
-                        const d2 = await r2.json();
-                        answer = d2?.choices?.[0]?.message?.content || '';
+                        const text = await r2.text();
+                        if (text && text.trim().length > 10) answer = text;
                     }
-                } catch(e2) { console.warn('Provider 2 failed:', e2.message); }
+                } catch(e2) { console.warn('Pollinations direct failed:', e2.message); }
             }
 
-            // Provider 3: Guaranteed local intelligent fallback
+            // Provider 3: Local intelligent fallback (always works)
             if (!answer || answer.trim().length < 5) {
                 answer = generateSmartFallback(cleanPrompt);
             }
@@ -215,7 +216,8 @@ async function processAIResponse(prompt, image) {
             // Copy button
             const actions = document.createElement('div');
             actions.style.cssText = 'margin-top:8px;';
-            actions.innerHTML = `<button onclick="navigator.clipboard.writeText(this.dataset.text);this.innerHTML='✅ Copied!';setTimeout(()=>this.innerHTML='📋 Copy',2000);" data-text="${answer.replace(/"/g,'&quot;')}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;padding:4px 12px;border-radius:8px;">📋 Copy</button>`;
+            const safeText = answer.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            actions.innerHTML = `<button onclick="navigator.clipboard.writeText(this.dataset.text);this.innerHTML='✅ Copied!';setTimeout(()=>this.innerHTML='📋 Copy',2000);" data-text="${safeText}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;padding:4px 12px;border-radius:8px;">📋 Copy</button>`;
             content.appendChild(actions);
         }
     } catch (e) {
@@ -232,16 +234,28 @@ async function processAIResponse(prompt, image) {
     }
 }
 
-// Smart local fallback when all APIs fail
+// Intelligent local fallback — covers common topics
 function generateSmartFallback(prompt) {
     const p = prompt.toLowerCase();
-    if (p.includes('hello') || p.includes('hi') || p.includes('namaste') || p.includes('helo'))
-        return `👋 **Hello! Main Nexus AI Ultra hoon.**\n\nMain aapki kaise madad kar sakta hoon? Kuch bhi poochho — coding, science, Hindi, ya kuch bhi! 🚀`;
-    if (p.includes('ai') || p.includes('artificial intelligence'))
-        return `🤖 **Artificial Intelligence (AI)** ek technology hai jo machines ko insano ki tarah sochne aur seekhne ki takaat deti hai.\n\n**Key Types:**\n- **Machine Learning** — Data se seekhna\n- **Deep Learning** — Neural networks\n- **NLP** — Language samajhna\n- **Computer Vision** — Images dekhna\n\n*Nexus AI Ultra khud ek advanced AI system hai!* ✨`;
-    if (p.includes('what is') || p.includes('kya hai') || p.includes('kya h'))
-        return `🧠 **Great question!**\n\nMain abhi limited mode mein hoon kyunki AI server temporarily busy hai. Thodi der baad try karein.\n\n**Pooch sakte hain:**\n- Coding problems\n- Science questions\n- General knowledge\n- Image generate karna`;
-    return `✨ **Nexus AI Ultra — Ready!**\n\nMain samajh gaya aapka sawaal. Server se connect ho raha hoon... Please ek baar dobara send karein. 🔄`;
+    if (/\b(hi|hello|hey|namaste|namaskar|helo)\b/.test(p))
+        return "👋 **Namaste! Main Nexus AI Ultra hoon.**\n\nAap kuch bhi pooch sakte hain — coding, science, math, history, ya kuch bhi! Batayein, kaise madad karoon? 🚀";
+    if (/\b(ai|artificial intelligence)\b/.test(p))
+        return "🤖 **Artificial Intelligence (AI)** ek powerful technology hai.\n\n**Types:**\n- **Machine Learning** — Data se seekhna\n- **Deep Learning** — Neural networks use karna\n- **NLP** — Bhasha samajhna\n- **Computer Vision** — Images analyze karna\n- **Generative AI** — Naya content banana (jaise ChatGPT)\n\nAI aaj healthcare, finance, education, aur entertainment mein use ho raha hai. ✨";
+    if (/\b(code|coding|program|python|javascript|html|css|java|react)\b/.test(p))
+        return "💻 **Coding Expert Mode Active!**\n\nMain coding mein help kar sakta hoon:\n- **Python** — Data science, AI, automation\n- **JavaScript** — Web apps, Node.js\n- **HTML/CSS** — Beautiful websites\n- **React** — Modern UI development\n\nApna specific question batayein! Jaise: *'Write a Python function to sort a list'*";
+    if (/\b(math|calculate|ganit|formula)\b/.test(p))
+        return "🔢 **Math Expert Ready!**\n\nMain solve kar sakta hoon:\n- Algebra, Geometry, Trigonometry\n- Calculus, Statistics\n- Word problems\n\nApna question likho, jaise: *'Solve x² + 5x + 6 = 0'*";
+    if (/\b(weather|mausam|temperature)\b/.test(p))
+        return "🌤️ Real-time weather ke liye **Google Weather** ya **weather.com** check karein.\n\nKoi aur question ho toh zaroor poochein!";
+    if (/\b(who are you|kaun ho|kon ho|tum kaun|kya ho)\b/.test(p))
+        return "🧠 **Main Nexus AI Ultra v3.5 hoon!**\n\n**Features:**\n- 💬 Hindi + English chat\n- 🎨 Image generation\n- 💻 Code generation\n- 🔬 Research & analysis\n- 🗣️ Voice interaction\n\nMujhse kuch bhi poochein! 🚀";
+    if (/\b(thank|dhanyavad|shukriya|thanks)\b/.test(p))
+        return "😊 Aapka swagat hai! Kuch aur help chahiye toh zaroor poochein. Main hamesha ready hoon! 🌟";
+    if (/\b(data science|machine learning|deep learning|neural)\b/.test(p))
+        return "📊 **Data Science & ML**\n\n**Key Concepts:**\n- **Data Science** — Data se insights nikalna\n- **Machine Learning** — Algorithm jo data se seekhe\n- **Deep Learning** — Complex neural networks\n- **Tools:** Python, TensorFlow, PyTorch, Pandas\n\n**Career Path:** Learn Python → Statistics → ML → Deep Learning → Specialize!";
+    if (/\b(history|itihas|bharat|india)\b/.test(p))
+        return "📜 **India ka rich history hai!**\n\n- **Indus Valley** (3300 BCE) — World's oldest civilization\n- **Vedic Period** — Sanskrit, Vedas, Upanishads\n- **Mughal Empire** — Architecture, culture\n- **British Rule** — 1857 revolt to 1947 independence\n- **Modern India** — World's largest democracy\n\nKisi specific topic pe detail chahiye?";
+    return `💡 **Nexus AI Ultra**\n\nAapka sawaal mila: *"${prompt}"*\n\nAbhi AI server connect ho raha hai. Thodi der mein dobara try karein.\n\n**Try these:**\n- "What is AI?"\n- "Write Python code for..."\n- "Generate image of..."\n- "What is data science?"`;
 }
 
 // --- Voice & Speech ---
