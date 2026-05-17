@@ -669,13 +669,25 @@ function toggleTheme() {
 }
 
 function showNotification(title, message, type = 'info') {
+    // Suppress Firebase local file error to avoid annoying popups during local testing
+    if (window.location.protocol === 'file:' && message && message.includes('operation-not-supported-in-this-environment')) {
+        return;
+    }
+
     const container = get('notification-container');
+    if (!container) return;
+
+    // Clear previous notifications to prevent stacking up like in the screenshot
+    container.innerHTML = '';
+
     const toast = document.createElement('div');
     toast.className = `glass-panel notification-toast ${type}`;
     toast.style = 'margin-bottom:10px; padding:15px; min-width:250px; border-left:4px solid var(--accent);';
     toast.innerHTML = `<strong>${title}</strong><br><small>${message}</small>`;
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => toast.remove(), 3000);
 }
 
 function logStatus(msg) {
