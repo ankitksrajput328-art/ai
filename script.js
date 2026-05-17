@@ -821,7 +821,7 @@ function exportChatHistory() {
 
 function shareApp() {
     const isLocal = window.location.origin.startsWith('file');
-    const shareUrl = isLocal ? 'https://nexus-ai-ultra.vercel.app' : window.location.origin;
+    const shareUrl = isLocal ? 'https://nexus-ai-ultra-ankit.vercel.app' : window.location.origin;
     
     const shareData = {
         title: 'Nexus AI Ultra',
