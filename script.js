@@ -727,6 +727,23 @@ function handleAuth(type) {
     }
 }
 
+function handleGoogleLogin() {
+    if (!auth) {
+        showNotification("Auth Error", "Firebase not initialized.", "error");
+        return;
+    }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+        .then(result => {
+            console.log('Signed in with Google:', result.user);
+            get('auth-modal').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Auth error:', error);
+            showNotification("Auth Error", error.message, "error");
+        });
+}
+
 function openAuthModal() {
     get('auth-modal').style.display = 'flex';
 }
