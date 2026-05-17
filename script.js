@@ -345,7 +345,7 @@ function startVoiceRecording() {
     voiceTranscript.innerText = 'Listening...';
     recognition.lang = get('voice-lang-select').value || 'en-US';
     recognition.start();
-    showNotification("Voice Node", "Biometric audio sync active.", "info");
+    showNotification("Voice Input", "Voice recognition active.", "info");
 }
 
 function stopVoiceRecording() {
@@ -734,7 +734,7 @@ function handleAuth(type) {
         localStorage.clear();
         location.reload();
     } else {
-        showNotification("Authentication", "Biometric hash verified.", "success");
+        showNotification("Cloud Sync", "Account connected successfully.", "success");
         get('auth-modal').style.display = 'none';
     }
 }

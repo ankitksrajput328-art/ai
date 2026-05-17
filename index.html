@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- SEO & Metadata -->
-    <title>Nexus AI Ultra | Official Enterprise AI Platform</title>
-    <meta name="description" content="Official Nexus AI Ultra platform. Secure, private, and enterprise-grade neural intelligence. For educational and research purposes only.">
-    <meta name="keywords" content="Nexus AI, Ultra, Enterprise Intelligence, Neural Network">
+    <title>Nexus AI Ultra | Personal AI Workspace</title>
+    <meta name="description" content="Explore multi-modal AI reasoning, chat, art creation, and smart tools on your personal Nexus AI assistant.">
+    <meta name="keywords" content="Nexus AI, Personal Assistant, Multi-modal AI, Neural Sandbox">
     
     <!-- PWA Manifest & Identity -->
     <link rel="manifest" href="/manifest.json">
@@ -270,7 +270,7 @@
 
                 <section id="view-memory" class="app-view hidden" aria-labelledby="memory-heading">
                     <h2 id="memory-heading" class="gradient-text">Neural Memory Banks</h2>
-                    <p style="color:var(--text-dim); margin-top:20px; font-size:14px;">This is an enterprise research platform. Please verify your workspace identity to proceed.</p>
+                    <p style="color:var(--text-dim); margin-top:20px; font-size:14px;">Configure personalized smart memory systems and preferences.</p>
                     <div class="memory-grid" style="display:grid; gap:20px; margin-top:30px;">
                         <div class="glass-panel" style="padding:25px; border-left:4px solid var(--accent);">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -502,19 +502,19 @@
         }
     </script>
 
-    <!-- Auth Modal (Enterprise Identity Verification) -->
+    <!-- Auth Modal (Safe Cloud Sync) -->
     <div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
         <div class="glass-panel" style="padding:40px; border-radius:24px; width:90%; max-width:400px; text-align:center; position:relative; box-shadow:0 20px 40px rgba(0,0,0,0.5);">
             <button onclick="document.getElementById('auth-modal').style.display='none'" style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer;"><i class="fa-solid fa-times"></i></button>
-            <i class="fa-solid fa-shield-halved" style="font-size:40px; color:var(--accent); margin-bottom:20px;"></i>
-            <h2 style="font-size:24px; margin-bottom:10px;">Workspace Access</h2>
-            <p style="color:var(--text-dim); font-size:14px; margin-bottom:30px;">Verify your neural research identity to synchronize data across nodes.</p>
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:40px; color:var(--accent); margin-bottom:20px;"></i>
+            <h2 style="font-size:24px; margin-bottom:10px;">Cloud Sync</h2>
+            <p style="color:var(--text-dim); font-size:14px; margin-bottom:30px;">Connect your account to back up and synchronize your AI chat sessions across devices.</p>
             
-            <button onclick="handleGoogleLogin()" style="width:100%; padding:15px; font-size:16px; background:white; color:#333; border:none; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:bold;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width:20px;"> Verify with Google
+            <button onclick="handleGoogleLogin()" style="width:100%; padding:15px; font-size:16px; background:#4285f4; color:white; border:none; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:bold; transition:all 0.3s ease;">
+                <i class="fa-brands fa-google"></i> Sign in with Google
             </button>
             
-            <p style="font-size:10px; color:var(--text-dim); margin-top:30px;">This is an Enterprise AI Research platform. By proceeding, you agree to our <a href="#" style="color:var(--accent)">Terms of Intelligence</a>.</p>
+            <p style="font-size:10px; color:var(--text-dim); margin-top:30px;">This is a personal sandbox AI assistant application. Your credentials are securely managed by Firebase Auth.</p>
         </div>
     </div>
 </body>

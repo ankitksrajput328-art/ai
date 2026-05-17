@@ -370,11 +370,22 @@ body {
 
 /* View Transitions */
 .app-view {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateY(10px);
+    padding: 30px;
+    overflow-y: auto;
+    padding-top: calc(var(--header-height) + 20px);
 }
 .app-view.active {
+    display: flex !important;
+    opacity: 1;
     transform: translateY(0);
+    z-index: 1;
 }
 
 /* Better Mobile Top Nav */
