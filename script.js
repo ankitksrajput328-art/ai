@@ -479,6 +479,16 @@ function generateVideo() {
     }, 300);
 }
 
+function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    const btn = get('voice-toggle-btn');
+    if (btn) {
+        btn.innerHTML = voiceEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+        btn.style.color = voiceEnabled ? 'var(--accent)' : 'var(--text-dim)';
+    }
+    showNotification("Voice Engine", voiceEnabled ? "Neural voice enabled." : "Voice muted.", "info");
+}
+
 // --- AI Voice Synthesis ---
 function speakText(text) {
     if (!voiceEnabled || !window.speechSynthesis) return;
@@ -628,6 +638,16 @@ function setInput(text) {
     userInput.value = text;
     autoResize(userInput);
     userInput.focus();
+}
+
+function generateImageFromStudio() {
+    const prompt = get('image-prompt-input').value;
+    if (!prompt) return showNotification("Image Studio", "Please enter a prompt.", "warning");
+    
+    showView('chat');
+    setInput(prompt);
+    sendMessage();
+    get('image-prompt-input').value = '';
 }
 
 function autoResize(el) {
