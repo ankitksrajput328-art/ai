@@ -820,19 +820,23 @@ function exportChatHistory() {
 }
 
 function shareApp() {
+    const isLocal = window.location.origin.startsWith('file');
+    const shareUrl = isLocal ? 'https://nexus-ai-ultra.vercel.app' : window.location.origin;
+    
     const shareData = {
         title: 'Nexus AI Ultra',
         text: 'Experience the world\'s most advanced neural intelligence platform.',
-        url: window.location.origin
+        url: shareUrl
     };
 
-    if (navigator.share) {
+    if (navigator.share && !isLocal) {
         navigator.share(shareData)
             .then(() => showNotification('Shared', 'Thanks for spreading the intelligence!', 'success'))
             .catch((err) => console.log('Error sharing:', err));
     } else {
-        navigator.clipboard.writeText(shareData.url).then(() => {
-            showNotification('Link Copied', 'App link copied to clipboard!', 'info');
+        const fullMessage = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+        navigator.clipboard.writeText(fullMessage).then(() => {
+            showNotification('Link Copied', 'App details copied to clipboard!', 'success');
         });
     }
 }
