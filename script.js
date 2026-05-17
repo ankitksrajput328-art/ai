@@ -34,9 +34,40 @@ window.onload = () => {
     initRouter();
     renderHistory();
     
+    // Register Service Worker for PWA (Install option)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[Nexus PWA] Service Worker Registered'))
+            .catch(err => console.warn('[Nexus PWA] Service Worker failed:', err));
+    }
+    
+    // Auto-load last session or start fresh
+    if (currentSessionId && chatSessions.find(s => s.id === currentSessionId)) {
+        loadSession(currentSessionId);
+    } else {
+        startNewChat();
+    }
+    
+    // Configure Markdown Syntax Highlighting (Safely)
+    try {
+        if (window.marked && window.hljs) {
+            if (typeof marked.setOptions === 'function') {
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                        return hljs.highlight(code, { language }).value;
+                    },
+                    langPrefix: 'hljs language-'
+                });
+            }
+        }
+    } catch (e) {
+        console.warn("Markdown syntax highlighting setup skipped:", e.message);
+    }
+    
     // Theme Restoration
-    if (localStorage.getItem('nexus_theme') === 'light') {
-        document.body.classList.add('light-theme');
+    if (localStorage.getItem('nexus_theme') === 'dark') {
+        document.body.classList.add('dark-theme');
     }
     updateVoiceIcon();
     
@@ -128,16 +159,16 @@ function addMessageToUI(text, isUser, save = true, image = null) {
     scrollToBottom();
 
     if (save) {
-        if (!currentSessionId) {
+        let session = chatSessions.find(s => s.id === currentSessionId);
+        if (!currentSessionId || !session) {
             currentSessionId = Date.now().toString();
-            chatSessions.unshift({ id: currentSessionId, title: text.substring(0, 30) || "New Conversation", messages: [] });
+            session = { id: currentSessionId, title: text.substring(0, 30) || "New Conversation", messages: [] };
+            chatSessions.unshift(session);
         }
-        const session = chatSessions.find(s => s.id === currentSessionId);
-        if (session) {
-            session.messages.push({ text, isUser, image });
-            saveSessions();
-            renderHistory();
-        }
+        
+        session.messages.push({ text, isUser, image });
+        saveSessions();
+        renderHistory();
     }
 }
 
@@ -170,6 +201,11 @@ async function processAIResponse(prompt, image) {
             const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
             fullResponse = `### 🎨 Image Generated!\n\n![Generated Image](${imageUrl})\n\n*"${cleanPrompt}"*`;
             textSpan.innerHTML = window.marked ? marked.parse(fullResponse) : fullResponse;
+            
+            // Ensure we scroll down AFTER image finishes loading over network
+            const imgEl = textSpan.querySelector('img');
+            if (imgEl) imgEl.onload = scrollToBottom;
+            
             speakResponse("Your image is ready.");
         } else {
             let answer = '';
@@ -190,28 +226,53 @@ async function processAIResponse(prompt, image) {
 
                 const ctrl1 = new AbortController();
                 const t1 = setTimeout(() => ctrl1.abort(), 15000);
-                const r1 = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: finalPrompt, history: contextHistory, webSearch: isWebSearch }),
-                    signal: ctrl1.signal
-                });
-                clearTimeout(t1);
-                if (r1.ok) {
-                    const d1 = await r1.json();
-                    answer = d1?.reply || '';
-                    console.log('AI Provider:', d1?.provider);
-                } else {
-                    try {
-                        const errData = await r1.json();
-                        answer = errData.reply || "⚠️ **Server Error:** Could not connect to Nexus AI Core.";
-                    } catch (e) {
-                        answer = "⚠️ **Server Error:** Could not connect to Nexus AI Core.";
+                let fallbackTriggered = false;
+                try {
+                    const r1 = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            prompt: finalPrompt, 
+                            history: contextHistory, 
+                            webSearch: isWebSearch,
+                            image: image,
+                            mimeType: typeof currentImageMimeType !== 'undefined' ? currentImageMimeType : 'image/jpeg'
+                        }),
+                        signal: ctrl1.signal
+                    });
+                    clearTimeout(t1);
+                    if (r1.ok) {
+                        const d1 = await r1.json();
+                        answer = d1?.reply || '';
+                    } else {
+                        fallbackTriggered = true;
+                    }
+                } catch (apiErr) {
+                    fallbackTriggered = true;
+                }
+
+                if (fallbackTriggered) {
+                    // Universal Client-side Fallback
+                    console.log("Backend unreachable. Using local universal fallback...");
+                    const messages = [
+                        { role: 'system', content: 'You are Nexus AI Ultra. Provide a highly detailed markdown response.' },
+                        ...contextHistory,
+                        { role: 'user', content: finalPrompt }
+                    ];
+                    const r2 = await fetch('https://text.pollinations.ai/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ messages, model: 'openai' })
+                    });
+                    if (r2.ok) {
+                        answer = await r2.text();
+                    } else {
+                        answer = "⚠️ **Network Error:** Failed to reach both Primary Core and Fallback Nodes.";
                     }
                 }
             } catch(e1) { 
-                console.warn('Server API failed:', e1.message); 
-                answer = "⚠️ **Network Error:** Failed to reach Nexus AI Core. Please check your internet connection.";
+                console.warn('AI Processing failed:', e1.message); 
+                answer = "⚠️ **Critical Error:** Logic engine fault.";
             }
 
             // Stream word by word
@@ -231,7 +292,7 @@ async function processAIResponse(prompt, image) {
             const actions = document.createElement('div');
             actions.style.cssText = 'margin-top:12px; display:flex; flex-wrap:wrap; gap:8px;';
             const safeText = answer.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            actions.innerHTML = `<button onclick="navigator.clipboard.writeText(this.dataset.text);this.innerHTML='✅ Copied!';setTimeout(()=>this.innerHTML='📋 Copy',2000);" data-text="${safeText}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);cursor:pointer;font-size:11px;padding:4px 12px;border-radius:8px;">📋 Copy</button>`;
+            actions.innerHTML = `<button onclick="navigator.clipboard.writeText(this.dataset.text);this.innerHTML='✅ Copied!';setTimeout(()=>this.innerHTML='📋 Copy',2000);" data-text="${safeText}" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);color:var(--accent);cursor:pointer;font-size:11px;padding:4px 12px;border-radius:12px;font-weight:600;">📋 Copy</button>`;
             
             // Add Smart Suggestions
             const suggestions = generateFollowUpQuestions(cleanPrompt);
@@ -270,6 +331,12 @@ function toggleVoiceRecording() {
     } else {
         startVoiceRecording();
     }
+}
+
+function updateVoiceLang() {
+    const lang = document.getElementById('voice-lang-select').value;
+    const langName = lang === 'hi-IN' ? 'Hindi' : 'English';
+    showNotification("Voice Engine", `Input language set to ${langName}.`, "info");
 }
 
 function startVoiceRecording() {
@@ -346,10 +413,34 @@ function stopVision() {
 }
 
 function captureVision() {
-    showNotification("Vision", "Analyzing spatial geometry...", "info");
-    setTimeout(() => {
-        showNotification("Analysis Complete", "Object: Terminal Interface. State: Optimized.", "success");
-    }, 2000);
+    const video = get('vision-video');
+    if (!video || !visionStream) return showNotification("Error", "Camera not active.", "error");
+
+    showNotification("Vision", "Capturing spatial geometry...", "info");
+    
+    // Create an invisible canvas to capture the frame
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Extract base64
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    const base64Data = dataUrl.split(',')[1];
+    
+    // Close vision view
+    showView('chat');
+    
+    // Set up chat variables
+    currentImageBase64 = base64Data;
+    currentImageMimeType = 'image/jpeg';
+    get('image-preview').src = dataUrl;
+    get('image-preview-area').style.display = 'block';
+    
+    // Send it
+    setInput("Analyze this image and describe what you see in detail.");
+    sendMessage();
 }
 
 function generateVideo() {
@@ -389,15 +480,6 @@ function generateVideo() {
 }
 
 // --- AI Voice Synthesis ---
-let voiceEnabled = localStorage.getItem('nexus_voice') === 'true';
-
-function toggleVoice() {
-    voiceEnabled = !voiceEnabled;
-    localStorage.setItem('nexus_voice', voiceEnabled);
-    showNotification("Neural Voice", voiceEnabled ? "Voice Output: ON" : "Voice Output: OFF", "info");
-    if (!voiceEnabled) window.speechSynthesis.cancel();
-}
-
 function speakText(text) {
     if (!voiceEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -457,8 +539,17 @@ function showView(viewName) {
 
 // --- Session Management ---
 function saveSessions() {
-    localStorage.setItem('nexus_sessions', JSON.stringify(chatSessions));
-    localStorage.setItem('nexus_current_id', currentSessionId);
+    try {
+        localStorage.setItem('nexus_sessions', JSON.stringify(chatSessions));
+        if (currentSessionId) {
+            localStorage.setItem('nexus_current_id', currentSessionId);
+        } else {
+            localStorage.removeItem('nexus_current_id');
+        }
+    } catch (e) {
+        console.warn("Storage quota exceeded:", e);
+        showNotification("Memory Full", "Neural storage limit reached. Please clear old chats.", "warning");
+    }
     if (typeof syncToCloud === 'function') syncToCloud();
 }
 
@@ -495,18 +586,26 @@ function loadSession(id) {
     currentSessionId = id;
     const session = chatSessions.find(s => s.id === id);
     if (!session) return;
-    chatContent.innerHTML = '';
+    
+    // Clear only messages
+    Array.from(chatContent.querySelectorAll('.message-row')).forEach(e => e.remove());
     if (welcomeScreen) welcomeScreen.style.display = 'none';
+    
     session.messages.forEach(m => addMessageToUI(m.text, m.isUser, false, m.image));
     showView('chat');
 }
 
 function startNewChat() {
     currentSessionId = null;
-    chatContent.innerHTML = '';
+    // Clear only messages
+    Array.from(chatContent.querySelectorAll('.message-row')).forEach(e => e.remove());
+    
     if (welcomeScreen) {
         welcomeScreen.style.display = 'flex';
-        chatContent.appendChild(welcomeScreen);
+        // Ensure it's inside chatContent just in case
+        if (!chatContent.contains(welcomeScreen)) {
+            chatContent.appendChild(welcomeScreen);
+        }
     }
     showView('chat');
     showNotification("New Session", "Neural node reset.", "info");
@@ -544,8 +643,9 @@ function handleKeyPress(e) {
 }
 
 function toggleTheme() {
-    const isLight = document.body.classList.toggle('light-theme');
-    localStorage.setItem('nexus_theme', isLight ? 'light' : 'dark');
+    const isDark = document.body.classList.toggle('dark-theme');
+    localStorage.setItem('nexus_theme', isDark ? 'dark' : 'light');
+    showNotification("Theme", isDark ? "Dark Node Activated" : "Light Node Activated", "info");
 }
 
 function showNotification(title, message, type = 'info') {
@@ -627,7 +727,10 @@ function selectModel(name) {
 }
 
 function scrollToBottom() {
-    chatContent.scrollTo({ top: chatContent.scrollHeight, behavior: 'smooth' });
+    const scrollView = document.querySelector('#view-chat');
+    if (scrollView) {
+        scrollView.scrollTo({ top: scrollView.scrollHeight, behavior: 'smooth' });
+    }
 }
 
 function copyToClipboard(btn) {
@@ -645,10 +748,38 @@ function clearChatHistory() {
     if (confirm("Erase all neural memory nodes? This cannot be undone.")) {
         chatSessions = [];
         saveSessions();
-        get('chat-messages').innerHTML = '';
+        Array.from(chatContent.querySelectorAll('.message-row')).forEach(e => e.remove());
         renderHistory();
+        startNewChat();
         showNotification('Neural Memory', 'History purged successfully.', 'success');
     }
+}
+
+function exportChatHistory() {
+    const session = chatSessions.find(s => s.id === currentSessionId);
+    if (!session || !session.messages || session.messages.length === 0) {
+        return showNotification('Export Failed', 'No active conversation to export.', 'warning');
+    }
+
+    let textContent = `# Nexus AI Conversation Log\nDate: ${new Date().toLocaleString()}\nTitle: ${session.title}\n\n---\n\n`;
+    
+    session.messages.forEach(msg => {
+        const role = msg.isUser ? 'USER' : 'NEXUS AI';
+        textContent += `### ${role}:\n${msg.text}\n\n`;
+        if (msg.image) textContent += `*[Image Attached]*\n\n`;
+    });
+
+    const blob = new Blob([textContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Nexus_AI_Log_${new Date().toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Export Successful', 'Chat log downloaded as Markdown.', 'success');
 }
 
 function shareApp() {

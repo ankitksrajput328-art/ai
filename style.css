@@ -44,7 +44,7 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background: radial-gradient(circle at 50% 50%, #f1f5f9, #e2e8f0);
+    background: radial-gradient(circle at 50% 50%, var(--bg-side), var(--bg-main));
 }
 
 .nebula-bg::before {
@@ -211,7 +211,7 @@ body {
 
 /* Glass Panels */
 .glass-panel { 
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border); 
     border-radius: var(--border-radius); 
     backdrop-filter: blur(20px); 
@@ -276,7 +276,8 @@ body {
 }
 
 .input-wrapper {
-    background: var(--bg-side);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: 30px;
     padding: 16px 24px;
@@ -402,3 +403,108 @@ body {
     100% { opacity: 0.6; }
 }
 .health-bar-pulse { animation: healthPulse 2s infinite ease-in-out; }
+
+/* --- Markdown Content Styling (Like ChatGPT/Gemini) --- */
+.ai-msg table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; background: rgba(0,0,0,0.02); border-radius: 8px; overflow: hidden; }
+body.dark-theme .ai-msg table { background: rgba(255,255,255,0.02); }
+.ai-msg th, .ai-msg td { padding: 12px 15px; border: 1px solid var(--glass-border); text-align: left; }
+.ai-msg th { background: rgba(0,0,0,0.05); font-weight: 600; }
+body.dark-theme .ai-msg th { background: rgba(255,255,255,0.05); }
+
+.ai-msg pre { background: #1e1e1e !important; border-radius: 12px; padding: 15px; margin: 15px 0; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.ai-msg pre, .ai-msg pre code { color: #e5e7eb !important; text-shadow: none !important; }
+.ai-msg code { font-family: 'Consolas', 'Monaco', monospace; font-size: 13.5px; }
+.ai-msg p code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+body.dark-theme .ai-msg p code { background: rgba(255,255,255,0.1); color: #a78bfa; }
+
+.ai-msg blockquote { border-left: 4px solid var(--accent); margin: 15px 0; padding-left: 15px; color: var(--text-dim); font-style: italic; }
+.ai-msg ul, .ai-msg ol { padding-left: 20px; margin: 10px 0; }
+.ai-msg li { margin-bottom: 5px; }
+
+/* Image Generation Fixes */
+.ai-msg img {
+    max-width: 100%;
+    max-height: 450px;
+    object-fit: contain;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    margin: 15px 0;
+    background: rgba(0,0,0,0.05);
+}
+
+/* Settings Page UI Fixes */
+.setting-row-pro {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    gap: 15px;
+    border-bottom: 1px solid var(--glass-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+    color: var(--text-main);
+}
+.setting-row-pro:last-child {
+    border-bottom: none;
+}
+.setting-row-pro:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+body.dark-theme .setting-row-pro:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+.setting-row-pro i:first-child {
+    font-size: 18px;
+    color: var(--accent);
+    width: 24px;
+    text-align: center;
+}
+.setting-row-pro > span {
+    flex: 1;
+}
+.setting-row-pro i.fa-chevron-right {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: auto;
+}
+
+/* Header Action Buttons */
+.icon-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.icon-btn:hover {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-glow {
+    background: var(--accent);
+    color: white !important;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px var(--accent-glow);
+    transition: all 0.2s ease;
+}
+.btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--accent-glow);
+    opacity: 0.9;
+}

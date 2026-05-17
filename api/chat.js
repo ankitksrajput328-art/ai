@@ -5,8 +5,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const { prompt, history = [], webSearch = false } = req.body || {};
-  if (!prompt) return res.status(400).json({ error: 'prompt required' });
+  const { prompt, history = [], webSearch = false, image = null, mimeType = 'image/jpeg' } = req.body || {};
+  if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
 
   const systemMsg = `You are Nexus AI Ultra, a highly advanced super-intelligence.
 Your primary directive is to provide EXTREMELY DETAILED, comprehensive, and exhaustive answers.
@@ -16,19 +16,25 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
   const messages = [
     { role: 'system', content: systemMsg },
     ...history.slice(-10).map(m => ({ role: m.role || 'user', content: m.content })),
-    { role: 'user', content: prompt }
+    { role: 'user', content: prompt || "Analyze this image." }
   ];
 
   // Attempt 1: Gemini (2026 Ultra Series)
   if (process.env.GEMINI_API_KEY) {
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.1-flash-lite-preview', 'gemini-2.5-pro'];
+    const models = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro', 'gemini-2.0-flash'];
     for (const model of models) {
       try {
+        let parts = [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + (prompt || "Analyze this image.") }];
+        if (image) {
+            parts.push({
+                inline_data: { mime_type: mimeType, data: image }
+            });
+        }
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            contents: [{ role: 'user', parts: [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + prompt }] }]
+            contents: [{ role: 'user', parts: parts }]
           })
         });
         if (r.ok) {

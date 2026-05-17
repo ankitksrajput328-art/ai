@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nexus-ai-ultra-v9';
+const CACHE_NAME = 'nexus-ai-ultra-v10';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -7,7 +7,9 @@ const ASSETS_TO_CACHE = [
   '/logo.png',
   '/icon-512.png',
   'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'
 ];
 
 self.addEventListener('install', event => {

@@ -158,6 +158,7 @@
                     </div>
                     <div class="header-actions" style="display:flex; gap:10px;">
                         <button id="voice-toggle-btn" class="icon-btn" onclick="toggleVoice()" title="Toggle Neural Voice"><i class="fa-solid fa-volume-high"></i></button>
+                        <button class="icon-btn" onclick="exportChatHistory()" title="Export Chat"><i class="fa-solid fa-download"></i></button>
                         <button class="icon-btn" onclick="clearChatHistory()" title="Clear Neural Memory"><i class="fa-solid fa-trash-can"></i></button>
                         <button class="icon-btn" onclick="showNotification('Encryption', 'Point-to-point encryption active.', 'success')"><i class="fa-solid fa-shield-halved"></i></button>
                         <button class="btn-glow" onclick="startNewChat()" aria-label="Start New Chat"><i class="fa-solid fa-plus"></i> <span class="desktop-only">New Chat</span></button>
@@ -183,6 +184,14 @@
                                 <button class="prompt-card glass-panel" onclick="setInput('Research fusion energy breakthroughs')" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
                                     <i class="fa-solid fa-globe" style="color:#3b82f6;"></i>
                                     <h3 style="margin-top:10px; font-size:16px;">Deep Research</h3>
+                                </button>
+                                <button class="prompt-card glass-panel" onclick="setInput('Write a python script for machine learning using scikit-learn'); sendMessage();" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
+                                    <i class="fa-brands fa-python" style="color:#10b981;"></i>
+                                    <h3 style="margin-top:10px; font-size:16px;">Python Script</h3>
+                                </button>
+                                <button class="prompt-card glass-panel" onclick="setInput('Compare React and Flutter in a detailed table'); sendMessage();" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
+                                    <i class="fa-solid fa-table" style="color:#ec4899;"></i>
+                                    <h3 style="margin-top:10px; font-size:16px;">Compare Tech</h3>
                                 </button>
                             </div>
                         </div>
@@ -262,12 +271,6 @@
                 <section id="view-memory" class="app-view hidden" aria-labelledby="memory-heading">
                     <h2 id="memory-heading" class="gradient-text">Neural Memory Banks</h2>
                     <p style="color:var(--text-dim); margin-top:20px; font-size:14px;">This is an enterprise research platform. Please verify your workspace identity to proceed.</p>
-            <div style="margin-top:30px; display:flex; flex-direction:column; gap:15px;">
-                <button class="btn-glow" onclick="handleAuth('google')" style="width:100%;"><i class="fa-brands fa-google"></i> Continue with Google</button>
-                <button class="btn-outline" onclick="closeAuthModal()" style="width:100%;">Cancel</button>
-            </div>
-            <p style="font-size:10px; color:var(--text-dim); margin-top:30px;">By continuing, you agree to our <a href="#" style="color:var(--accent)">Terms of Research</a> and <a href="#" style="color:var(--accent)">Data Privacy Protocol</a>.</p>
-        </div>/p>
                     <div class="memory-grid" style="display:grid; gap:20px; margin-top:30px;">
                         <div class="glass-panel" style="padding:25px; border-left:4px solid var(--accent);">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -461,6 +464,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="script.js"></script>
 
     <!-- PWA Service Worker -->

@@ -3,6 +3,7 @@
   "name": "nexus-ai-ultra",
   "cleanUrls": false,
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
