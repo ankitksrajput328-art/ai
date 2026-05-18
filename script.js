@@ -55,6 +55,36 @@ let isRecording = false;
 let recognition = null;
 let visionStream = null;
 
+// --- Gemini Live Demo Function ---
+function toggleVoiceRecording() {
+    isRecording = !isRecording;
+    const btn = document.getElementById('voice-btn');
+    if (isRecording) {
+        btn.classList.add('pulse-glow');
+        btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Listening...';
+        showNotification("Gemini Live", "Connecting to neural voice node...", "info");
+        // Simulate voice input end after 3 seconds
+        setTimeout(() => {
+            if (isRecording) {
+                toggleVoiceRecording();
+                showNotification("Gemini Live", "Voice input received.", "success");
+                setInput("Hello Gemini, I am testing the live voice feature.");
+            }
+        }, 3000);
+    } else {
+        btn.classList.remove('pulse-glow');
+        btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Live';
+    }
+}
+
+function setInput(text) {
+    const inputArea = document.getElementById('user-input');
+    if (inputArea) {
+        inputArea.value = text;
+        autoResize(inputArea);
+    }
+}
+
 // --- DOM Selectors ---
 const get = (id) => document.getElementById(id);
 const chatContent = get('chat-content');

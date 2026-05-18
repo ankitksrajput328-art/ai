@@ -170,25 +170,21 @@
                     <div class="chat-container" id="chat-content">
                         <!-- Welcome Screen -->
                         <div class="welcome-view" id="welcome-screen" style="padding:100px 20px 0 20px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                            <h1 class="gradient-text" style="font-size:clamp(32px, 8vw, 48px); font-weight:800; margin-bottom:16px;">Limitless Intelligence.</h1>
-                            <p style="color:var(--text-dim); font-size:clamp(14px, 4vw, 18px); margin-bottom:40px; max-width:600px;">Synthesize the web, generate cinematic art, and solve complex logic.</p>
+                            <h1 class="gradient-text" style="font-size:clamp(32px, 8vw, 48px); font-weight:800; margin-bottom:16px;">Hello, how can I help you today?</h1>
+                            <p style="color:var(--text-dim); font-size:clamp(14px, 4vw, 18px); margin-bottom:40px; max-width:600px;">Ask me anything, generate images, or analyze data.</p>
                             
-                            <div class="quick-prompts" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; max-width:800px; margin:0 auto;">
-                                <button class="prompt-card glass-panel" onclick="setInput('Build a 3D animated solar system')" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
-                                    <i class="fa-solid fa-cube" style="color:var(--accent);"></i>
-                                    <h3 style="margin-top:10px; font-size:16px;">3D Artifacts</h3>
+                            <div class="quick-prompts" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; max-width:800px; margin:0 auto; width:100%;">
+                                <button class="prompt-card glass-panel" onclick="setInput('Help me write a professional email to my boss')" style="padding:15px; cursor:pointer; border:none; color:white; text-align:left; border-radius:12px;">
+                                    <p style="font-size:14px; color:var(--text-main);">Help me write a professional email...</p>
                                 </button>
-                                <button class="prompt-card glass-panel" onclick="setInput('Research fusion energy breakthroughs')" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
-                                    <i class="fa-solid fa-globe" style="color:#3b82f6;"></i>
-                                    <h3 style="margin-top:10px; font-size:16px;">Deep Research</h3>
+                                <button class="prompt-card glass-panel" onclick="setInput('Brainstorm names for a tech startup')" style="padding:15px; cursor:pointer; border:none; color:white; text-align:left; border-radius:12px;">
+                                    <p style="font-size:14px; color:var(--text-main);">Brainstorm names for a tech startup...</p>
                                 </button>
-                                <button class="prompt-card glass-panel" onclick="setInput('Write a python script for machine learning using scikit-learn'); sendMessage();" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
-                                    <i class="fa-brands fa-python" style="color:#10b981;"></i>
-                                    <h3 style="margin-top:10px; font-size:16px;">Python Script</h3>
+                                <button class="prompt-card glass-panel" onclick="setInput('Explain quantum computing in simple terms')" style="padding:15px; cursor:pointer; border:none; color:white; text-align:left; border-radius:12px;">
+                                    <p style="font-size:14px; color:var(--text-main);">Explain quantum computing in simple terms...</p>
                                 </button>
-                                <button class="prompt-card glass-panel" onclick="setInput('Compare React and Flutter in a detailed table'); sendMessage();" style="padding:20px; cursor:pointer; border:none; color:white; text-align:left;">
-                                    <i class="fa-solid fa-table" style="color:#ec4899;"></i>
-                                    <h3 style="margin-top:10px; font-size:16px;">Compare Tech</h3>
+                                <button class="prompt-card glass-panel" onclick="setInput('Create a 7-day workout plan for beginners')" style="padding:15px; cursor:pointer; border:none; color:white; text-align:left; border-radius:12px;">
+                                    <p style="font-size:14px; color:var(--text-main);">Create a 7-day workout plan...</p>
                                 </button>
                             </div>
                         </div>

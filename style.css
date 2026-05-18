@@ -556,3 +556,14 @@ body.dark-theme .setting-row-pro:hover {
     display: flex !important;
     flex-direction: column;
 }
+
+/* Pulse Glow Animation */
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 5px rgba(236, 72, 153, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(236, 72, 153, 0.4); }
+}
+.pulse-glow {
+    animation: pulseGlow 1.5s infinite ease-in-out;
+    background: linear-gradient(135deg, #f43f5e, #ec4899) !important;
+}
