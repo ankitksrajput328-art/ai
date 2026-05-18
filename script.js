@@ -1,6 +1,42 @@
 // Nexus AI Ultra - Core Logic Engine V3.0 (PRO Edition)
 // Developed by Ankit Antigravity
 
+// --- Firebase Real-Time Configuration ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDq7ejqZJzFcYp_jfxA2cNMBVryEJvZBvs",
+    authDomain: "nexus-ai-ultra-4cf8d.firebaseapp.com",
+    projectId: "nexus-ai-ultra-4cf8d",
+    storageBucket: "nexus-ai-ultra-4cf8d.firebasestorage.app",
+    messagingSenderId: "458163586885",
+    appId: "1:458163586885:web:9db04950dd9938f57aa02c",
+    measurementId: "G-K0GGYDBNKV"
+};
+
+let app, auth, db;
+try {
+    if (firebaseConfig.apiKey) {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        console.log('Firebase initialized');
+        
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                console.log('User signed in:', user.email);
+                showNotification('Signed In', 'Welcome back to Nexus AI', 'success');
+                document.getElementById('auth-modal').style.display = 'none';
+                // Update UI
+                const profileName = document.querySelector('.user-profile span:first-child');
+                if (profileName) profileName.innerText = user.displayName || user.email.split('@')[0];
+            } else {
+                console.log('User signed out');
+            }
+        });
+    }
+} catch (e) {
+    console.log('Firebase init skipped: ', e.message);
+}
+
 // Global Error Handler
 window.onerror = function(m,u,l,c,e){ console.error('Nexus Error:',m,u,l); return false; };
 
@@ -479,15 +515,7 @@ function generateVideo() {
     }, 300);
 }
 
-function toggleVoice() {
-    voiceEnabled = !voiceEnabled;
-    const btn = get('voice-toggle-btn');
-    if (btn) {
-        btn.innerHTML = voiceEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
-        btn.style.color = voiceEnabled ? 'var(--accent)' : 'var(--text-dim)';
-    }
-    showNotification("Voice Engine", voiceEnabled ? "Neural voice enabled." : "Voice muted.", "info");
-}
+
 
 // --- AI Voice Synthesis ---
 function speakText(text) {
@@ -739,22 +767,7 @@ function handleAuth(type) {
     }
 }
 
-function handleGoogleLogin() {
-    if (!auth) {
-        showNotification("Auth Error", "Firebase not initialized.", "error");
-        return;
-    }
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-        .then(result => {
-            console.log('Signed in with Google:', result.user);
-            get('auth-modal').style.display = 'none';
-        })
-        .catch(error => {
-            console.error('Auth error:', error);
-            showNotification("Auth Error", error.message, "error");
-        });
-}
+
 
 function openAuthModal() {
     get('auth-modal').style.display = 'flex';
@@ -869,42 +882,7 @@ function generateFollowUpQuestions(prompt) {
 }
 
 
-// --- Firebase Real-Time Configuration ---
-const firebaseConfig = {
-    apiKey: "AIzaSyDq7ejqZJzFcYp_jfxA2cNMBVryEJvZBvs",
-    authDomain: "nexus-ai-ultra-4cf8d.firebaseapp.com",
-    projectId: "nexus-ai-ultra-4cf8d",
-    storageBucket: "nexus-ai-ultra-4cf8d.firebasestorage.app",
-    messagingSenderId: "458163586885",
-    appId: "1:458163586885:web:9db04950dd9938f57aa02c",
-    measurementId: "G-K0GGYDBNKV"
-};
 
-// Initialize Firebase only if config is provided
-let app, auth, db;
-try {
-    if (firebaseConfig.apiKey) {
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.database();
-        console.log('Firebase initialized');
-        
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                console.log('User signed in:', user.email);
-                showNotification('Signed In', 'Welcome back to Nexus AI', 'success');
-                document.getElementById('auth-modal').style.display = 'none';
-                // Update UI
-                const profileName = document.querySelector('.user-profile span:first-child');
-                if (profileName) profileName.innerText = user.displayName || user.email.split('@')[0];
-            } else {
-                console.log('User signed out');
-            }
-        });
-    }
-} catch (e) {
-    console.log('Firebase init skipped: ', e.message);
-}
 
 function handleLogin() {
     const email = document.getElementById('auth-email').value;

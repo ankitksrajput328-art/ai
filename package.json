@@ -1,4 +1,6 @@
 {
+  "$schema": "./schemas/package-schema.json",
+
   "name": "ai_chat_app",
   "version": "1.0.0",
   "description": "![Nexus AI Banner](https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=1200)",

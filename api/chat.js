@@ -13,9 +13,10 @@ Your primary directive is to provide EXTREMELY DETAILED, comprehensive, and exha
 Never give short or lazy answers. Use rich markdown. 
 If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in English.`;
 
+  // Format messages for OpenAI/Pollinations (Fallback)
   const messages = [
     { role: 'system', content: systemMsg },
-    ...history.slice(-10).map(m => ({ role: m.role || 'user', content: m.content })),
+    ...history.map(m => ({ role: m.role || 'user', content: m.content })),
     { role: 'user', content: prompt || "Analyze this image." }
   ];
 
@@ -24,25 +25,43 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
     const models = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro', 'gemini-2.0-flash'];
     for (const model of models) {
       try {
-        let parts = [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + (prompt || "Analyze this image.") }];
+        // Format contents for Gemini
+        const contents = [];
+        
+        // Add history
+        history.forEach(m => {
+          contents.push({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+          });
+        });
+
+        // Add current prompt
+        const currentParts = [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + (prompt || "Analyze this image.") }];
         if (image) {
-            parts.push({
-                inline_data: { mime_type: mimeType, data: image }
-            });
+          currentParts.push({
+            inline_data: { mime_type: mimeType, data: image }
+          });
         }
+        contents.push({
+          role: 'user',
+          parts: currentParts
+        });
+
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            contents: [{ role: 'user', parts: parts }]
-          })
+          body: JSON.stringify({ contents })
         });
+
         if (r.ok) {
           const d = await r.json();
           const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
           if (text) return res.status(200).json({ reply: text, provider: `nexus-node-${model}` });
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error(`Gemini ${model} failed:`, e);
+      }
     }
   }
 
@@ -52,7 +71,7 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: prompt }],
+        messages: messages,
         model: 'openai'
       })
     });
@@ -60,7 +79,9 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
       const text = await fallbackResponse.text();
       if (text) return res.status(200).json({ reply: text, provider: 'nexus-neural-core' });
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("Fallback failed:", e);
+  }
 
   return res.status(500).json({ reply: "⚠️ **System Critical Error:** All Neural Nodes are failing. Please verify your GEMINI_API_KEY in Vercel settings." });
 }
