@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nexus-ai-ultra-v11';
+const CACHE_NAME = 'nexus-ai-ultra-v12';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
