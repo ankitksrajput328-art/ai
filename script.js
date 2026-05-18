@@ -85,6 +85,20 @@ function setInput(text) {
     }
 }
 
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+let currentVoiceLang = 'en-US';
+function updateVoiceLang() {
+    const select = document.getElementById('voice-lang-select');
+    if (select) {
+        currentVoiceLang = select.value;
+        showNotification("Language Updated", `Voice language set to ${currentVoiceLang}`, "info");
+    }
+}
+
 // --- DOM Selectors ---
 const get = (id) => document.getElementById(id);
 const chatContent = get('chat-content');
