@@ -5,8 +5,19 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 // --- Nexus Admin Dashboard Component (Next.js 14) ---
 
+interface RevenueData {
+  name: string;
+  value: number;
+}
+
+interface DashboardStats {
+  revenue: RevenueData[];
+  totalUsers: number;
+  activeSessions: number;
+}
+
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     // In production: fetch("/api/admin/stats").then(res => res.json()).then(setStats);
@@ -64,7 +75,13 @@ const AdminDashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, icon }) => (
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: string;
+}
+
+const StatCard = ({ title, value, icon }: StatCardProps) => (
   <div className="bg-[#0A0A0F] p-8 rounded-3xl border border-white/5 hover:border-[#6366f144] transition-all group">
     <div className="flex justify-between items-center mb-4">
       <span className="text-gray-400 text-xs uppercase tracking-widest">{title}</span>

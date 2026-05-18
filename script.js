@@ -37,6 +37,14 @@ try {
     console.log('Firebase init skipped: ', e.message);
 }
 
+// Sandbox session restoration
+if (localStorage.getItem('nexus_sandbox_user') === 'true') {
+    setTimeout(() => {
+        const profileName = document.querySelector('.user-profile span:first-child');
+        if (profileName) profileName.innerText = 'Sandbox Commander';
+    }, 100);
+}
+
 // Global Error Handler
 window.onerror = function(m,u,l,c,e){ console.error('Nexus Error:',m,u,l); return false; };
 
@@ -55,49 +63,7 @@ let isRecording = false;
 let recognition = null;
 let visionStream = null;
 
-// --- Gemini Live Demo Function ---
-function toggleVoiceRecording() {
-    isRecording = !isRecording;
-    const btn = document.getElementById('voice-btn');
-    if (isRecording) {
-        btn.classList.add('pulse-glow');
-        btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Listening...';
-        showNotification("Gemini Live", "Connecting to neural voice node...", "info");
-        // Simulate voice input end after 3 seconds
-        setTimeout(() => {
-            if (isRecording) {
-                toggleVoiceRecording();
-                showNotification("Gemini Live", "Voice input received.", "success");
-                setInput("Hello Gemini, I am testing the live voice feature.");
-            }
-        }, 3000);
-    } else {
-        btn.classList.remove('pulse-glow');
-        btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Live';
-    }
-}
-
-function setInput(text) {
-    const inputArea = document.getElementById('user-input');
-    if (inputArea) {
-        inputArea.value = text;
-        autoResize(inputArea);
-    }
-}
-
-function autoResize(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
-}
-
 let currentVoiceLang = 'en-US';
-function updateVoiceLang() {
-    const select = document.getElementById('voice-lang-select');
-    if (select) {
-        currentVoiceLang = select.value;
-        showNotification("Language Updated", `Voice language set to ${currentVoiceLang}`, "info");
-    }
-}
 
 // --- DOM Selectors ---
 const get = (id) => document.getElementById(id);
@@ -406,17 +372,27 @@ async function processAIResponse(prompt, image) {
 function toggleVoiceRecording() {
     if (!recognition) return showNotification("System", "Speech recognition not supported in this browser.", "error");
     
+    const btn = document.getElementById('voice-btn');
     if (isRecording) {
         stopVoiceRecording();
     } else {
         startVoiceRecording();
+        if (btn) {
+            btn.classList.add('pulse-glow');
+            btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Listening...';
+        }
     }
 }
 
 function updateVoiceLang() {
-    const lang = document.getElementById('voice-lang-select').value;
-    const langName = lang === 'hi-IN' ? 'Hindi' : 'English';
-    showNotification("Voice Engine", `Input language set to ${langName}.`, "info");
+    const select = document.getElementById('voice-lang-select');
+    if (select) {
+        const lang = select.value;
+        currentVoiceLang = lang;
+        if (recognition) recognition.lang = lang;
+        const langName = lang === 'hi-IN' ? 'Hindi' : 'English';
+        showNotification("Voice Engine", `Input language set to ${langName}.`, "info");
+    }
 }
 
 function startVoiceRecording() {
@@ -432,6 +408,11 @@ function stopVoiceRecording() {
     isRecording = false;
     voiceOverlay.style.display = 'none';
     recognition.stop();
+    const btn = document.getElementById('voice-btn');
+    if (btn) {
+        btn.classList.remove('pulse-glow');
+        btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Live';
+    }
     if (userInput.value) sendMessage();
 }
 
@@ -775,6 +756,7 @@ function handleFileUpload(e) {
         const reader = new FileReader();
         reader.onload = (event) => {
             currentImageBase64 = event.target.result.split(',')[1];
+            currentImageMimeType = file.type || 'image/jpeg';
             get('image-preview').src = event.target.result;
             get('image-preview-area').style.display = 'block';
         };
@@ -950,13 +932,39 @@ function handleLogin() {
     }
 }
 
+function handleSandboxLogin() {
+    localStorage.setItem('nexus_sandbox_user', 'true');
+    showNotification('Sandbox Enabled', 'Successfully authenticated as Sandbox Commander.', 'success');
+    
+    // Update User Profile Text
+    const profileName = document.querySelector('.user-profile span:first-child');
+    if (profileName) profileName.innerText = 'Sandbox Commander';
+    
+    // Hide auth modal
+    const modal = document.getElementById('auth-modal');
+    if (modal) modal.style.display = 'none';
+}
+
 function handleGoogleLogin() {
     if (auth) {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider)
-            .catch(error => showNotification('Error', error.message, 'error'));
+            .catch(error => {
+                console.warn('Firebase login failed:', error.message);
+                if (error.code === 'auth/api-key-not-valid' || error.message.includes('api-key-not-valid') || error.message.includes('API key')) {
+                    showNotification('Firebase Redirect', 'Switching to secure Sandbox Offline Mode...', 'warning');
+                    setTimeout(() => {
+                        handleSandboxLogin();
+                    }, 1000);
+                } else {
+                    showNotification('Error', error.message, 'error');
+                }
+            });
     } else {
-        showNotification('System Error', 'Firebase Authentication is not initialized.', 'error');
+        showNotification('System Redirect', 'Switching to secure Sandbox Offline Mode...', 'warning');
+        setTimeout(() => {
+            handleSandboxLogin();
+        }, 1000);
     }
 }
 

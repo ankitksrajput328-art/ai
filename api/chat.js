@@ -5,7 +5,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const { prompt, history = [], webSearch = false, image = null, mimeType = 'image/jpeg' } = req.body || {};
+  let { prompt, history = [], webSearch = false, image = null, mimeType } = req.body || {};
+  if (!mimeType) mimeType = 'image/jpeg';
   if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
 
   const systemMsg = `You are Nexus AI Ultra, a highly advanced super-intelligence.
@@ -40,7 +41,7 @@ If user writes in Hindi/Hinglish, reply in Hindi/Hinglish. If English, reply in 
         const currentParts = [{ text: "Instructions: " + systemMsg + "\n\nPrompt: " + (prompt || "Analyze this image.") }];
         if (image) {
           currentParts.push({
-            inline_data: { mime_type: mimeType, data: image }
+            inlineData: { mimeType: mimeType, data: image }
           });
         }
         contents.push({
