@@ -31,6 +31,14 @@ try {
             } else {
                 console.log('User signed out');
             }
+        }, error => {
+            console.warn('Firebase Auth State Error caught:', error.message);
+            if (error.code === 'auth/api-key-not-valid' || error.message.includes('api-key-not-valid') || error.message.includes('API key')) {
+                console.log('Switching to secure Sandbox Offline Mode due to invalid API key...');
+                if (localStorage.getItem('nexus_sandbox_user') !== 'true') {
+                    handleSandboxLogin();
+                }
+            }
         });
     }
 } catch (e) {
@@ -996,6 +1004,8 @@ if (auth) {
                 }
             });
         }
+    }, error => {
+        console.warn('Cloud Sync Auth State Error caught:', error.message);
     });
 }
 
